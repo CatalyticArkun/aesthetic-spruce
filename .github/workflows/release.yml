@@ -71,11 +71,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "v${{ inputs.version }}" "${{ steps.nightly.outputs.sha }}" \
-            -m "Aesthetic Spruce v${{ inputs.version }} (pinned from ${{ inputs.nightly_tag }})"
-          git push origin "v${{ inputs.version }}"
+          # The tag is created by the Releases API (--target). A git push of the tag is refused for
+          # GITHUB_TOKEN because the tagged tree contains .github/workflows ("workflows" permission).
           cat > notes.md <<MD
           Aesthetic Spruce v${{ inputs.version }}, pinned to commit ${{ steps.nightly.outputs.sha }} from nightly \`${{ inputs.nightly_tag }}\`.
 
@@ -92,9 +89,11 @@ jobs:
       - name: Bump version on main
         if: ${{ inputs.bump_main }}
         run: |
-          git stash -q -- src/version.lua || true
-          git checkout main
-          git stash pop -q || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp src/version.lua /tmp/version.lua
+          git checkout -f main
+          cp /tmp/version.lua src/version.lua
           git add src/version.lua
           git commit -m "Bump version to ${{ inputs.version }}"
           git push origin main

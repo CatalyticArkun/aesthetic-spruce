@@ -199,8 +199,9 @@ Two manual GitHub Actions in `.github/workflows/`:
   archives as a workflow artifact and, unless `publish` is off, creates a pre-release tagged
   `nightly-<date>-<sha>` with the zip, the 7z and `SHA256SUMS.txt`.
 - **Stable release** (`release.yml`): give it a nightly tag and a version `X.Y.Z`; it checks out the
-  nightly's exact commit, sets `src/version.lua` to that version with no prerelease, rebuilds, tags
-  the commit `vX.Y.Z` and publishes a normal release whose notes name the nightly. `bump_main`
+  nightly's exact commit, sets `src/version.lua` to that version with no prerelease, rebuilds, and
+  publishes a normal release whose notes name the nightly; the Releases API creates the `vX.Y.Z` tag
+  (a workflow token cannot push tags of a tree that contains `.github/workflows`). `bump_main`
   additionally commits the version bump to `main`; otherwise bump `src/version.lua` yourself so the
   next nightly does not report the old number.
 
