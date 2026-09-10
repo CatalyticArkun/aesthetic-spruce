@@ -141,7 +141,7 @@ function Slider:draw()
 	-- Draw ticks
 	love.graphics.setColor(colors.ui.overlay)
 	for i = 1, #self.values do
-		local tickX = trackX + ((i - 1) / (#self.values - 1)) * trackWidth - (Slider.TICK_WIDTH / 2)
+		local tickX = trackX + ((i - 1) / math.max(1, #self.values - 1)) * trackWidth - (Slider.TICK_WIDTH / 2)
 		local tickY = trackY + Slider.TRACK_HEIGHT + Slider.TICK_VERTICAL_OFFSET
 		love.graphics.rectangle("fill", tickX, tickY, Slider.TICK_WIDTH, Slider.TICK_HEIGHT, 1)
 	end
@@ -184,12 +184,6 @@ function Slider:handleInput(input)
 	return false
 end
 
-function Slider:handleInputIfFocused(input)
-	if self.focused then
-		return self:handleInput(input)
-	end
-	return false
-end
 
 return {
 	Slider = Slider,

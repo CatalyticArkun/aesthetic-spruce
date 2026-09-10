@@ -64,12 +64,11 @@ end
 
 function splash.draw()
 	local ok, err = pcall(function()
-		love.graphics.push("all")
 		love.graphics.clear(splash.background.color)
-
 		if not splash.font then
 			return
 		end
+		love.graphics.push("all")
 		love.graphics.setFont(splash.font)
 
 		love.graphics.setColor(colors.ui.foreground[1], colors.ui.foreground[2], colors.ui.foreground[3], splash.alpha)

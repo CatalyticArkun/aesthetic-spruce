@@ -1,39 +1,23 @@
--- Theme preset
--- Classic teal and white interface from the 1990s
+-- Theme preset: Classic teal and white interface from the 1990s
 return {
 	themeName = "Win95",
-	background = {
-		value = "#008080",
-		type = "Solid",
-	},
-	backgroundGradient = {
-		value = "#008080",
-		direction = "Vertical",
-	},
-	foreground = {
-		value = "#FFFFFF",
-	},
-	rgb = {
-		value = "#008080",
-		mode = "Solid",
-		brightness = 5,
-		speed = 0,
-	},
-	created = os.time(),
-	boxArtWidth = 0,
 	fontFamily = "Cascadia Code",
 	fontSize = "Default",
 	homeScreenLayout = "Grid",
-	headerAlignment = 2,
-	headerOpacity = 0,
-	navigationAlignment = "Left",
-	navigationOpacity = 100,
-	statusAlignment = "Right",
-	timeAlignment = "Left",
-	datetimeOpacity = 255,
-	glyphsEnabled = true,
+	backgroundType = "Solid",
+	backgroundGradientDirection = "Vertical",
+	systemIcons = true,
+	boxArtWidth = 0,
+	showTopBarText = false,
+	showBottomBar = true,
+	showClock = true,
+	showBattery = true,
+	colors = {
+		background = "#008080",
+		backgroundGradient = "#008080",
+		foreground = "#FFFFFF",
+		batteryActive = "#4ADE80",
+		batteryLow = "#F87171",
+	},
 	source = "built-in",
-	batteryActive = "#4ADE80",
-	batteryLow = "#F87171",
-	batteryOpacity = 255,
 }

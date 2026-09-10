@@ -16,44 +16,30 @@ fonts.nameToKey = {}
 fonts.themeDefinitions = {
 	{
 		name = "Inter",
-		binDefault = "inter_semibold_24.bin",
-		bin1024x768 = "inter_semibold_36.bin",
 		ttf = "assets/fonts/inter/inter_24pt_semibold.ttf",
 	},
 	{
 		name = "Montserrat",
-		binDefault = "montserrat_semibold_25.bin",
-		bin1024x768 = "montserrat_semibold_37.bin",
 		ttf = "assets/fonts/montserrat/montserrat_semibold.ttf",
 	},
 	{
 		name = "Nunito",
-		binDefault = "nunito_bold_25.bin",
-		bin1024x768 = "nunito_bold_37.bin",
 		ttf = "assets/fonts/nunito/nunito_bold.ttf",
 	},
 	{
 		name = "JetBrains Mono",
-		binDefault = "jetbrains_mono_bold_25.bin",
-		bin1024x768 = "jetbrains_mono_bold_36.bin",
 		ttf = "assets/fonts/jetbrains_mono/jetbrains_mono_bold.ttf",
 	},
 	{
 		name = "Cascadia Code",
-		binDefault = "cascadia_code_bold_25.bin",
-		bin1024x768 = "cascadia_code_bold_37.bin",
 		ttf = "assets/fonts/cascadia_code/cascadia_code_bold.ttf",
 	},
 	{
 		name = "Retro Pixel",
-		binDefault = "retro_pixel_thick_28.bin",
-		bin1024x768 = "retro_pixel_thick_41.bin",
 		ttf = "assets/fonts/retro_pixel/retro_pixel_thick.ttf",
 	},
 	{
 		name = "Bitter",
-		binDefault = "bitter_semibold_26.bin",
-		bin1024x768 = "bitter_semibold_39.bin",
 		ttf = "assets/fonts/bitter/bitter_semibold.ttf",
 	},
 }

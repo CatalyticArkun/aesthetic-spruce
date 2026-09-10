@@ -47,6 +47,8 @@ local BUTTON_TYPES = {
 -- Preload icons for checkboxes
 local SQUARE = svg.loadIcon("square", 24)
 local SQUARE_CHECK_ICON = svg.loadIcon("square-check", 24)
+local CHEVRON_LEFT = svg.loadIcon("chevron-left", ICON_SIZE)
+local CHEVRON_RIGHT = svg.loadIcon("chevron-right", ICON_SIZE)
 
 -- Button class
 local Button = setmetatable({}, { __index = Component })
@@ -68,6 +70,9 @@ function Button:new(config)
 
 	-- Visual properties
 	instance.hexColor = config.hexColor
+	instance.displayText = config.displayText
+	instance.color1Hex = config.color1Hex
+	instance.color2Hex = config.color2Hex
 	instance.startColor = config.startColor
 	instance.stopColor = config.stopColor
 	instance.direction = config.direction or "Vertical"
@@ -153,9 +158,7 @@ function Button:update(dt)
 			self:_startPulseTween(-self._pulseDirection)
 		end
 	end
-	if Component.update then
-		Component.update(self, dt)
-	end
+	Component.update(self, dt)
 end
 
 function Button:getText()
@@ -266,6 +269,10 @@ function Button:drawIndicators()
 	self:drawText()
 
 	local valueText = self:getCurrentOption()
+	if self.displayText then
+		valueText = self.displayText(valueText) -- e.g. 0 -> "Disabled"
+	end
+	valueText = tostring(valueText)
 	if not valueText then
 		return
 	end
@@ -278,9 +285,7 @@ function Button:drawIndicators()
 	local iconY = self.y + self.height / 2
 	local opacity = self.disabled and 0.3 or 1
 
-	-- Load chevron icons
-	local leftChevron = svg.loadIcon("chevron-left", ICON_SIZE)
-	local rightChevron = svg.loadIcon("chevron-right", ICON_SIZE)
+	local leftChevron, rightChevron = CHEVRON_LEFT, CHEVRON_RIGHT
 
 	-- Draw value text
 	love.graphics.setColor(colors.ui.foreground[1], colors.ui.foreground[2], colors.ui.foreground[3], opacity)
@@ -393,7 +398,6 @@ function Button:drawGradient()
 end
 
 function Button:drawAccented()
-	love.graphics.reset()
 	local font = fonts.loaded.body
 	love.graphics.setFont(font)
 	local textWidth = font:getWidth(self.text)
@@ -519,7 +523,6 @@ function Button:drawDualColor()
 end
 
 function Button:drawKey()
-	love.graphics.reset()
 	love.graphics.push("all")
 	local keyFont = fonts.loaded.body
 	love.graphics.setFont(keyFont)

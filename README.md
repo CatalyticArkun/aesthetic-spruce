@@ -1,81 +1,112 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/banner_dark.webp">
   <source media="(prefers-color-scheme: light)" srcset=".github/banner_light.webp">
-  <img alt="Project banner" src=".github/banner_light.webp">
+  <img alt="unofficial Aesthetic for Spruce" src=".github/banner_light.webp">
 </picture>
 
 <div align="center">
   <p>
-    A <a href="https://muos.dev">muOS</a> application for creating minimalistic duo-tone themes directly on your handheld.
-  </p>
-  <p>
-    <img src="/.github/preview_animated.webp" width="50%" height="50%" alt="Preview of Aesthetic">
-  </p>
-  <p>
-    <img src="/.github/screenshot_main_menu_screen.png" width="30%" alt="Aesthetic main menu screen">
-    <img src="/.github/screenshot_palette_screen.png" width="30%" alt="Aesthetic color palette screen">
-    <img src="/.github/screenshot_font_family_screen.png" width="30%" alt="Aesthetic font family screen">
+    <b>Aesthetic Spruce</b> is an unofficial fork of <a href="https://github.com/joneavila/aesthetic"><b>Aesthetic</b></a> by Jonathan Avila, being reworked into a <a href="https://github.com/spruceUI/spruceOS">spruceOS</a> app that generates themes directly on your handheld.
   </p>
 </div>
 
+> [!IMPORTANT]
+> **This repository is not affiliated with, endorsed by, or maintained by the original author, and it is not an official spruceUI project.**
+> It is a community project whose only relationship to the original is that it started from its source code (MIT licensed), as a fork of `joneavila/aesthetic` at v1.10.1; the git history carries the original commits. "Spruce" in the name says which firmware it targets, nothing more.
+> Do not report problems with *this* fork to the original author, and do not report problems with the original muOS app here.
+>
+> The original app is **Aesthetic for muOS** by **Jonathan Avila** ([@joneavila](https://github.com/joneavila)): https://github.com/joneavila/aesthetic
+
+## ❤️ Support the original author
+
+All of the design, the UI, the colour tooling and the theme pipeline this fork builds on were created by Jonathan Avila. If this project is useful to you, please support **them**, not this fork:
+
+- Donate via the original author's Ko-fi: [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F1F51COHHT)
+- Star and use the original app: https://github.com/joneavila/aesthetic ([Releases](https://github.com/joneavila/aesthetic/releases), [wiki](https://github.com/joneavila/aesthetic/wiki), [muOS community thread](https://community.muos.dev/t/aesthetic-create-themes-directly-on-your-handheld))
+
+This fork accepts no donations.
+
+## 🌲 Aesthetic Spruce
+
+Pick colours, a gradient, a font and a layout on the handheld; the app writes a complete PyUI theme to `Themes/<name>` and activates it.
+
+**Devices** (aarch64 spruceOS 4.3.x)
+
+- Verified: TrimUI Smart Pro S, TrimUI Brick Pro, Miyoo Flip, Miniloong Pocket 1, Anbernic RG35XX SP, Anbernic RG40XX-class 720x480.
+- Expected: TrimUI Brick and Smart Pro, MagicX Zero28, GKD Pixel2, the rest of the Anbernic RG XX family, RGB30.
+- Not supported: Miyoo A30 and the Mini family (32-bit, no LÖVE runtime).
+
+**Build and run**
+
+```
+python3 -m pip install cairosvg lupa          # host tools: icon rasteriser, LuaJIT syntax check
+./build.sh                                     # dist/sd-overlay/App/AestheticSpruce/ plus a .zip and a .7z of it
+LOVE=/path/to/love ./dev_launch.sh 1280 720    # run on a workstation (LÖVE 11.5); .dev/ is the fake card
+AESTHETIC_AUTOBUILD=1 AESTHETIC_PRESET=dmg ./dev_launch.sh 1280 720 && python3 utils/validate_theme.py .dev/Themes/DMG
+```
+
+**Docs**
+
+- [DEVELOPMENT.md](DEVELOPMENT.md): how the app is built, how the theme model and renderers work, how to add an option, how to test on a device.
+- [TODO.md](TODO.md): open items.
+
+**Changes from upstream**
+
+- Theme output is a renderer (`src/utils/skin_renderer.lua`, `icon_renderer.lua`, `pyui_config.lua`): PyUI themes are bitmap skins plus a `config.json`, not `.ini` schemes.
+- TÖVE (native SVG) is gone; icons are rasterised on the host and tinted at runtime.
+- muOS-only parts (launcher, `.muxupd` packaging, LVGL fonts, ImageMagick, RGB, `theme.sh`) are replaced by `spruce/launch.sh`, `build.sh`, TTF fonts, LÖVE canvases and a write to the device's system json.
+- The editor UI, colour pickers, presets and settings are the original code.
+
+**Contributing.** Open an issue or pull request on [this repository](https://github.com/CatalyticArkun/aesthetic). For the muOS app, use the [original repository](https://github.com/joneavila/aesthetic).
+
+**AI disclosure.** This port was written with AI assistance (Claude), directed and tested by the maintainer on real devices. Throughout, the original author's attribution, credits and Ko-fi have been kept intact as far as possible; the design and the editor code are Jonathan Avila's work.
+
 ## ✨ Features
 
-- **Theme Customization**
-  - **Home Screen Layout**: Choose between grid and list view
-  - **Colors**: Customize background and foreground colors using a palette, HSV picker, or hex code
-    - **Background**: Set a solid color or two-color gradient
-  - **RGB Lighting**: Configure mode (solid, breathing, rainbow, off), with adjustable color, speed, and brightness
-  - **Font**: Choose from *Inter*, *Montserrat*, *Nunito*, *JetBrains Mono*, *Cascadia Code*, *Retro Pixel*, or *Bitter* — supporting clean, rounded, monospaced, serif, and pixelated styles
-  - **Icons**: Enable or disable list glyphs
-  - **Header, Navigation, Status, Time**: Independently adjust alignment and transparency (alpha) for each section
-- **Theme Management**
-  - **Name and Export**: Save your theme directly to your theme collection
-  - **Apply**: Automatically apply your theme before exiting to instantly see your creation
-  - **Auto-Restore**: Remembers your last theme configuration for easy adjustments when you return
-  - **Presets**: Save and load theme presets with 8 built-in presets – *Win95*, *Purple Noir*, *Terminal*, *Vaporwave*, *Orange Cream*, *DMG*, *Fami*, *Bumblebee*
-- **OTA Updates**: Download the latest version directly within the app
+- **Theme customisation**
+  - **Home Screen Layout**: grid of tiles or a text list
+  - **Colors**: background and foreground from a palette, an HSV picker or a hex code; solid or two-colour gradient background
+  - **Battery**: charging and low colours
+  - **Font**: *Inter*, *Montserrat*, *Nunito*, *JetBrains Mono*, *Cascadia Code*, *Retro Pixel* or *Bitter*
+  - **Icons**: system icon tiles on or off, drawn as a glyph per family (handheld, TV console, arcade, computer, engines and ports) or as the first letter of the system's name
+  - **Bars**: title, clock, battery and button hints, each shown or hidden
+  - **Box Art Width**: size of the box art next to the game list
+  - **spruceOS Options**: view type for the game list, systems and apps; Recents, Collections and Favorites tiles; index counter; screensaver timeout
+- **Theme management**
+  - **Build**: writes a complete PyUI theme to `Themes/<name>` with the device's native resolution set and the 640x480 base set
+  - **Activate**: switch to the new theme immediately, or later from Settings, Theme
+  - **Auto-restore**: the app reopens with your last settings
+  - **Presets**: nine built in (*Win95*, *Purple Noir*, *Terminal*, *Vaporwave*, *Orange Cream*, *DMG*, *Fami*, *Bumblebee*, *Mint*), plus your own
+- **Compatibility check**: warns once at start if the card runs a spruceOS release the app was not built for (4.3.x) or PyUI's theme loader has changed
 
 ## 📦 Installation
 
 > [!IMPORTANT]
-> **Aesthethic** is designed for muOS version 2502.0 PIXIE. You can check your muOS version via ***Information*** > ***System Details***.
+> Built for **spruceOS 4.3.x** on aarch64 devices (see Devices above). The Miyoo A30 and Mini family are not supported.
 
-1. Download the latest `Aesthetic-x.x.x.muxupd` from [Releases](https://github.com/joneavila/aesthetic/releases).
-2. Transfer `Aesthetic-x.x.x.muxupd` to your handheld's `SD1 (mmc)/ARCHIVE` directory.
-3. Open ***Applications*** > ***Archive Manager***.
-4. Select **[SD1] Aesthetic-x.x.x.muxupd** to install.
-5. Launch the application via ***Applications*** > ***Aesthetic***.
+1. Get `AestheticSpruce_vX.Y.Z_sd-overlay.zip` from the [Releases](https://github.com/CatalyticArkun/aesthetic/releases) of this repository, or build it with `./build.sh`.
+2. Unzip it onto the root of the spruceOS card, so that `App/AestheticSpruce` sits next to your other apps.
+3. Launch ***Apps*** > ***Aesthetic Spruce***.
 
 ## ⚙️ Usage
 
-1. From the main menu, select the theme options to customize. Each screen includes helpful control hints at the bottom.
-2. Select "Create theme" to save your theme to your device's collection.
-3. Apply your theme automatically, or apply it manually later via ***Configuration*** > ***Customisation*** > ***muOS Themes***.
-
-## 🛠️ Contributing
-
-Want to improve **Aesthetic**?
-
-- If you've found a bug or have a suggestion or question, [open an issue](https://github.com/joneavila/aesthetic/issues/new) or join the discussion on the [dedicated thread in the muOS community forum](https://community.muos.dev/t/aesthetic-create-themes-directly-on-your-handheld).
-- To contribute directly, fork the repo and [submit a pull request](https://github.com/joneavila/aesthetic/compare).
-- Check out the [wiki for the development guide](https://github.com/joneavila/aesthetic/wiki).
-
-## ❤️ Support
-
-You can support this project by starring the repo, sharing it with others, showcasing it in a video, or donating via Ko-fi. Any support is greatly appreciated – thank you for supporting open source software!
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F1F51COHHT)
-
-Looking for more muOS community apps? Check out: [**RomM**](https://github.com/rommapp/muos-app) (connect to self-hosted ROM manager), [**Scrappy**](https://github.com/gabrielfvale/scrappy) (art scraper), [**Bluetooth App**](https://github.com/nvcuong1312/bltMuos) (Bluetooth settings), [**RGB Controller**](https://github.com/JanTrueno) (RGB lighting settings).
-
-## 🗺️ Roadmap
-
-- [x] Remember most recent theme settings
-- [x] Customize theme font size
-- [x] Limit theme content width in content screens
-- [x] Save, load presets
+1. From the main menu, pick the options to customise. Each screen shows its controls at the bottom; A confirms, B goes back, Start opens Settings.
+2. Select **Build Theme** to write the theme to `Themes/<name>`.
+3. Choose **Activate Now** to switch to it, or apply it later via ***Settings*** > ***Theme***.
+4. Save and load presets from ***Settings*** (Start) > ***Save Theme Preset*** / ***Load Theme Preset***.
 
 ## ⭐ Credits
+
+### Original project
+
+- **Aesthetic** • Original application, design and source • [Jonathan Avila (@joneavila)](https://github.com/joneavila) • [MIT](LICENSE) • [Ko-fi](https://ko-fi.com/F1F51COHHT)
+
+### Added by this fork
+
+- Runtime libraries in `lib/fallback/` (OpenAL Soft LGPL-2.0, mpg123 LGPL-2.1, FreeType FTL, libvorbis/libogg/libtheora BSD, libmodplug public domain) taken unmodified from the spruceOS release tree; see [lib/fallback/PROVENANCE.md](lib/fallback/PROVENANCE.md). TÖVE is no longer shipped.
+- Reference dimensions in `src/spruce/skin_spec.lua` are generated from the SPRUCE theme by tenlevels (spruceOS default theme, MIT).
+
+### Original credits (kept intact from the upstream project)
 
 - [**Bitter**](https://fonts.google.com/specimen/Bitter) • Font • [OFL-1.1](assets/fonts/bitter/OFL.txt)
 - [**Cascadia Code**](https://github.com/microsoft/cascadia-code/) • Font • [OFL-1.1](assets/fonts/cascadia_code/LICENSE)
@@ -97,4 +128,4 @@ Looking for more muOS community apps? Check out: [**RomM**](https://github.com/r
 
 ## ⚖️ License
 
-This project is licensed under the MIT License. You are free to use, modify, and distribute this software, provided that you include the original copyright notice and a disclaimer of liability. For more details, see [LICENSE](LICENSE).
+This project is licensed under the MIT License. The original copyright notice, `Copyright (c) 2025 Jonathan Avila`, is preserved in [LICENSE](LICENSE) and must stay with any copy or substantial portion of this software. Changes made in this fork are released under the same license.

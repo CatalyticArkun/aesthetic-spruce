@@ -31,14 +31,17 @@ local function getCallerModule()
 end
 
 -- Get current timestamp in format YYYY-MM-DD HH:MM:SS.MMM
+-- Resolved once: the launcher sets it before the process starts
+local SESSION_LOG_FILE = os.getenv("SESSION_LOG_FILE")
+if not SESSION_LOG_FILE or SESSION_LOG_FILE == "" then
+	print("WARNING: SESSION_LOG_FILE not set, logging to stdout only")
+end
+
 local function getTimestamp()
 	-- Standard timestamp
 	local timestamp = os.date("%Y-%m-%d %H:%M:%S")
 
-	-- Add milliseconds if possible
-	local clock = os.clock()
-	local ms = math.floor((clock % 1) * 1000)
-	return timestamp .. "." .. string.format("%03d", ms)
+	return timestamp
 end
 
 -- Internal function to write log message
@@ -46,8 +49,7 @@ local function writeLog(level, message, moduleName)
 	local moduleNameGet = moduleName or getCallerModule()
 	local logLine = string.format("[%s] [%s] [%s] %s", getTimestamp(), level, moduleNameGet, message)
 
-	-- Get session log file from environment variable
-	local sessionLogFile = os.getenv("SESSION_LOG_FILE")
+	local sessionLogFile = SESSION_LOG_FILE
 
 	-- Always print to console in development mode
 	if CONSOLE_LOGGING or level == LOG_LEVELS.ERROR or level == LOG_LEVELS.CRITICAL then
@@ -55,8 +57,7 @@ local function writeLog(level, message, moduleName)
 	end
 
 	if not sessionLogFile or sessionLogFile == "" then
-		print("WARNING: SESSION_LOG_FILE environment variable not set, logging to stdout only")
-		return
+		return -- stdout only (warned once at load)
 	end
 
 	-- Append to log file

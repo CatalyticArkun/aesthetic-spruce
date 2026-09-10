@@ -63,13 +63,15 @@ local buttonLabels = {
 -- Button objects grid
 local buttonGrid = {}
 
+-- One Header used only to measure the content start (drawn nowhere)
+local measureHeader = Header:new({ title = "" })
+
 -- Helper to get manual content area for the color picker screen
 local function getManualContentArea()
 	local screenWidth = state.screenWidth
 	local screenHeight = state.screenHeight
 
-	local header = Header:new({ title = "" })
-	local headerContentStartY = header:getContentStartY()
+	local headerContentStartY = measureHeader:getContentStartY()
 	local tabBarHeight = TabBar.getHeight()
 	local controlsHeight = controls.calculateHeight(fonts.loaded.caption)
 	local contentTopPadding = 8
@@ -113,14 +115,15 @@ local function createButton(row, col, label)
 	local isBackspace = label == "BACKSPACE"
 	local iconName = isBackspace and "delete" or (isConfirm and "check" or nil)
 	local accent = isConfirm
+	local buttonWidth, buttonHeight = getButtonDimensions()
 	return Button:new({
 		text = (not iconName) and label or nil,
 		type = BUTTON_TYPES.KEY,
 		iconName = iconName,
 		iconSize = ICON_SIZE,
 		accent = accent,
-		width = select(1, getButtonDimensions()),
-		height = select(2, getButtonDimensions()),
+		width = buttonWidth,
+		height = buttonHeight,
 	})
 end
 
@@ -287,7 +290,7 @@ function hex.draw()
 
 	-- Draw controls
 	local controlsList = {
-		{ button = "y", text = "Clear" },
+		{ button = "x", text = "Clear" },
 		{ button = "a", text = "Select" },
 		{ button = { "leftshoulder", "rightshoulder" }, text = "Switch Tabs" },
 		{ button = "b", text = "Back" },

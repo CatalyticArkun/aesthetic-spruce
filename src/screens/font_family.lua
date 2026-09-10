@@ -228,7 +228,6 @@ function font.onEnter()
 				item.onClick()
 			end
 		end,
-		itemHeight = 45,
 	})
 
 	if not controlHintsInstance then

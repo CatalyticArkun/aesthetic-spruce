@@ -37,6 +37,7 @@ local CURSOR = {
 	CORNER_RADIUS = 4,
 	TWEEN_DURATION = 0.25,
 }
+local STICK_DEAD_ZONE = 0.25 -- analog sticks rest off-centre on handhelds; ignore drift
 local CACHE_RESOLUTION_DIVIDER = 4
 local HUE_UPDATE_THRESHOLD = 5 -- Only regenerate SV texture when hue changes by 5 degrees or more
 
@@ -90,6 +91,9 @@ local function initializeCachedTextures()
 			local r, g, b = colorUtils.hsvToRgb(currentState.hue, s, v)
 			svImageData:setPixel(x, y, r, g, b, 1)
 		end
+	end
+	if pickerState.cache.svSquare then
+		pickerState.cache.svSquare:release() -- previous texture is never reused
 	end
 	pickerState.cache.svSquare = love.graphics.newImage(svImageData)
 	pickerState.lastRenderedHue = currentState.hue
@@ -242,7 +246,7 @@ function hsv.draw()
 		svY,
 		0,
 		1,
-		pickerState.squareSize / (pickerState.squareSize / CACHE_RESOLUTION_DIVIDER)
+		CACHE_RESOLUTION_DIVIDER
 	)
 
 	-- Draw Hue slider outline
@@ -308,8 +312,8 @@ function hsv.draw()
 		svX,
 		svY,
 		0,
-		pickerState.squareSize / (pickerState.squareSize / CACHE_RESOLUTION_DIVIDER),
-		pickerState.squareSize / (pickerState.squareSize / CACHE_RESOLUTION_DIVIDER)
+		CACHE_RESOLUTION_DIVIDER,
+		CACHE_RESOLUTION_DIVIDER
 	)
 
 	love.graphics.setStencilTest() -- Disable stencil after drawing
@@ -370,6 +374,9 @@ local function updateSVSquare()
 			local r, g, b = colorUtils.hsvToRgb(currentState.hue, s, v)
 			svImageData:setPixel(x, y, r, g, b, 1)
 		end
+	end
+	if pickerState.cache.svSquare then
+		pickerState.cache.svSquare:release() -- previous texture is never reused
 	end
 	pickerState.cache.svSquare = love.graphics.newImage(svImageData)
 	pickerState.lastRenderedHue = currentState.hue
@@ -452,6 +459,12 @@ function hsv.update(dt)
 		end
 
 		-- Joystick controls (unchanged)
+		if math.abs(leftX) < STICK_DEAD_ZONE then
+			leftX = 0
+		end
+		if math.abs(leftY) < STICK_DEAD_ZONE then
+			leftY = 0
+		end
 		if leftX ~= 0 then
 			newSat = math.max(0, math.min(1, newSat + leftX * step))
 			moved = true
@@ -513,6 +526,9 @@ function hsv.update(dt)
 		end
 
 		-- Joystick Y-axis controls for hue (unchanged)
+		if math.abs(leftY) < STICK_DEAD_ZONE then
+			leftY = 0
+		end
 		if leftY ~= 0 then
 			newHue = (newHue - leftY * step) % 360
 

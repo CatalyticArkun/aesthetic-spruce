@@ -73,17 +73,6 @@ function debug.draw()
 			downPressed = physicalJoystick:isGamepadDown("dpdown")
 			leftPressed = physicalJoystick:isGamepadDown("dpleft")
 
-			-- Log button states
-			logger.debug(
-				"D-pad buttons state - Up: "
-					.. tostring(upPressed)
-					.. ", Right: "
-					.. tostring(rightPressed)
-					.. ", Down: "
-					.. tostring(downPressed)
-					.. ", Left: "
-					.. tostring(leftPressed)
-			)
 		end)
 
 		if not dpad_success then

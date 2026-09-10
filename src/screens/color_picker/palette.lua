@@ -11,6 +11,7 @@ local screens = require("screens")
 local shared = require("screens.color_picker.shared")
 
 local palette = {}
+local controlHintsInstance
 
 -- Constants
 local VERTICAL_PADDING = 20
@@ -232,7 +233,9 @@ function palette.draw()
 		{ button = { "leftshoulder", "rightshoulder" }, text = "Switch Tabs" },
 		{ button = "b", text = "Back" },
 	}
-	local controlHintsInstance = controls:new({})
+	if not controlHintsInstance then
+		controlHintsInstance = controls:new({})
+	end
 	controlHintsInstance:setControlsList(controlsList)
 	controlHintsInstance:draw()
 

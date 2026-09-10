@@ -304,7 +304,9 @@ function List:draw()
 	if not self.visible or #self.items == 0 then
 		return
 	end
-	self:calculateDimensions()
+	if not self._itemHeights or #self._itemHeights ~= #self.items then
+		self:calculateDimensions()
+	end
 	love.graphics.push("all")
 	local firstVisible = math.floor(self.scrollPosition) + 1
 	local lastVisible = math.min(firstVisible + self.visibleCount - 1, #self.items)
@@ -350,10 +352,6 @@ function List:draw()
 		local barX = self.x + self.width - scrollbarWidth
 		local rx = constants.SCROLLBAR.CORNER_RADIUS
 		local ry = rx
-		local totalVisibleHeight = 0
-		for i = 1, self.visibleCount do
-			totalVisibleHeight = totalVisibleHeight + self._itemHeights[i]
-		end
 		local barHeight = (self.height - self.paddingY * 2) * (self.visibleCount / #self.items)
 		local barY = self.y
 			+ self.paddingY
@@ -406,8 +404,10 @@ function List:setFocused(focused, direction)
 			self:setSelectedIndex(math.min(self._lastSelectedIndex, #self.items))
 		end
 	else
-		-- Direction is likely `nil`, so restore the last selected index
-		self._lastSelectedIndex = self.selectedIndex
+		-- Remember where focus was so it can be restored; a repeated blur must not clobber it with 0
+		if (self.selectedIndex or 0) > 0 then
+			self._lastSelectedIndex = self.selectedIndex
+		end
 		self:setSelectedIndex(0) -- Remove highlight when not focused
 	end
 	Component.setFocused(self, focused)

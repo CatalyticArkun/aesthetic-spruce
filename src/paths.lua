@@ -1,140 +1,92 @@
---- Path constants
+--- Path constants (spruceOS)
+---
+--- Environment contract (set by launch.sh on device, dev_launch.sh on a workstation):
+---   WIDTH / HEIGHT        logical landscape screen size (DISPLAY_WIDTH x DISPLAY_HEIGHT)
+---   ROTATION              DISPLAY_ROTATION in degrees (0, 90, 180, 270); the app renders a
+---                         logical WIDTHxHEIGHT canvas and rotates it like PyUI does
+---   ROOT_DIR              the app directory (App/AestheticSpruce); holds userdata/ and logs
+---   SOURCE_DIR            the Lua/asset tree the love binary runs (ROOT_DIR/.aesthetic)
+---   THEME_PRESETS_DIR     built-in presets (SOURCE_DIR/presets)
+---   SPRUCE_THEMES_DIR     where PyUI themes live (/mnt/SDCARD/Themes)
+---   SPRUCE_SYSTEM_JSON    the per-device system json whose "theme" key names the active theme
+---   SPRUCE_PLATFORM       spruce PLATFORM id (SmartProS, Flip, Miniloong, ...)
 local system = require("utils.system")
-local logger = require("utils.logger")
 local state = require("state")
 
 local paths = {}
 
 paths.SOURCE_DIR = system.getEnvironmentVariable("SOURCE_DIR")
 paths.ROOT_DIR = system.getEnvironmentVariable("ROOT_DIR")
-
 paths.THEME_PRESETS_DIR = system.getEnvironmentVariable("THEME_PRESETS_DIR")
-paths.SCHEME_TEMPLATE_DIR = system.getEnvironmentVariable("SCHEME_TEMPLATE_DIR")
 
-paths.MUOS_THEME_SCRIPT = "/opt/muos/script/package/theme.sh"
-paths.MUOS_THEMES_DIR = state.isDevMode and paths.ROOT_DIR .. "/run/muos/storage/theme" or "/run/muos/storage/theme"
+paths.SPRUCE_PLATFORM = os.getenv("SPRUCE_PLATFORM") or "unknown"
+paths.SPRUCE_THEMES_DIR = os.getenv("SPRUCE_THEMES_DIR")
+	or (state.isDevMode and (paths.ROOT_DIR .. "/Themes") or "/mnt/SDCARD/Themes")
+paths.SPRUCE_SYSTEM_JSON = os.getenv("SPRUCE_SYSTEM_JSON")
+	or (state.isDevMode and (paths.ROOT_DIR .. "/system.json") or nil)
 
 paths.USERDATA_DIR = paths.ROOT_DIR .. "/userdata"
 paths.USERDATA_THEME_PRESETS_DIR = paths.USERDATA_DIR .. "/presets"
 paths.USERDATA_SETTINGS_FILE = paths.USERDATA_DIR .. "/settings.lua"
 
+-- Themes are assembled here and moved into SPRUCE_THEMES_DIR/<name> when complete, so PyUI
+-- never lists a half-written theme.
 paths.WORKING_THEME_DIR = paths.ROOT_DIR .. "/theme_working"
 
-paths.ACTIVE_THEME_DIR = paths.MUOS_THEMES_DIR .. "/active"
-paths.ACTIVE_RGB_CONF = paths.ACTIVE_THEME_DIR .. "/rgb/rgbconf.sh"
-paths.ACTIVE_RGB_CONF_BACKUP = paths.ACTIVE_THEME_DIR .. "/rgb/rgbconf.sh.bak"
-
-local LED_CONTROL_SCRIPT_PIXIE = "/opt/muos/device/current/script/led_control.sh"
-local LED_CONTROL_SCRIPT_GOOSE = "/opt/muos/device/script/led_control.sh"
-paths.LED_CONTROL_SCRIPT = system.isFile(LED_CONTROL_SCRIPT_PIXIE) and LED_CONTROL_SCRIPT_PIXIE
-	or system.isFile(LED_CONTROL_SCRIPT_GOOSE) and LED_CONTROL_SCRIPT_GOOSE
-
-local MUOS_VERSION_FILE_PIXIE, MUOS_VERSION_FILE_GOOSE
-
-if state.isDevMode then
-	logger.debug("isDevMode: " .. tostring(state.isDevMode))
-	logger.debug("ROOT_DIR: " .. tostring(paths.ROOT_DIR))
-	paths.MUOS_VERSION_FILE = paths.ROOT_DIR .. "/opt/muos/config/version.txt"
-	logger.debug("MUOS_VERSION_FILE (dev): " .. tostring(paths.MUOS_VERSION_FILE))
-	if type(paths.ROOT_DIR) ~= "string" or paths.ROOT_DIR == "" then
-		logger.error("ROOT_DIR is not set or not a string in dev mode!")
-	end
-	if type(paths.MUOS_VERSION_FILE) ~= "string" or paths.MUOS_VERSION_FILE == "" then
-		logger.error("MUOS_VERSION_FILE is not set or not a string in dev mode!")
-	end
-	if not system.fileExists(paths.MUOS_VERSION_FILE) then
-		logger.error("MUOS_VERSION_FILE does not exist in dev mode: " .. tostring(paths.MUOS_VERSION_FILE))
-	end
-else
-	MUOS_VERSION_FILE_PIXIE = "/opt/muos/config/version.txt"
-	MUOS_VERSION_FILE_GOOSE = "/opt/muos/config/system/version"
-	paths.MUOS_VERSION_FILE = system.isFile(MUOS_VERSION_FILE_PIXIE) and MUOS_VERSION_FILE_PIXIE
-		or system.isFile(MUOS_VERSION_FILE_GOOSE) and MUOS_VERSION_FILE_GOOSE
-	if type(paths.MUOS_VERSION_FILE) ~= "string" or paths.MUOS_VERSION_FILE == "" then
-		logger.error("MUOS_VERSION_FILE is not set or not a string in prod mode!")
-	end
-	if not paths.MUOS_VERSION_FILE or not system.fileExists(paths.MUOS_VERSION_FILE) then
-		logger.error("MUOS_VERSION_FILE does not exist in prod mode: " .. tostring(paths.MUOS_VERSION_FILE))
-	end
-end
-
-paths.THEME_SOUND_SOURCE_DIR = paths.SOURCE_DIR .. "/assets/sounds"
-
-paths.THEME_CREDITS = paths.WORKING_THEME_DIR .. "/credits.txt"
-paths.THEME_NAME = paths.WORKING_THEME_DIR .. "/name.txt"
-paths.THEME_VERSION = paths.WORKING_THEME_DIR .. "/version.txt"
-paths.THEME_GLYPH_DIR = paths.WORKING_THEME_DIR .. "/glyph"
-paths.THEME_GLYPH_DIR_1024x768 = paths.WORKING_THEME_DIR .. "/1024x768/glyph"
-paths.THEME_SOUND_DIR = paths.WORKING_THEME_DIR .. "/sound"
-
-paths.GLYPHS_SOURCE_DIR = paths.SOURCE_DIR .. "/assets/icons/glyph"
-paths.GLYPHS_SOURCE_DIR_1024x768 = paths.SOURCE_DIR .. "/assets/1024x768/glyph"
-paths.HEADER_GLYPHS_SOURCE_DIR = paths.GLYPHS_SOURCE_DIR .. "/header"
+-- Assets used by the app UI
 paths.CONTROL_HINTS_SOURCE_DIR = paths.SOURCE_DIR .. "/assets/icons/kenney_input_prompts"
-
-paths.THEME_SCHEME_DIR = paths.WORKING_THEME_DIR .. "/scheme"
-paths.THEME_SCHEME_GLOBAL = paths.THEME_SCHEME_DIR .. "/global.ini"
-paths.THEME_SCHEME_MUXPLORE = paths.THEME_SCHEME_DIR .. "/muxplore.ini"
-paths.THEME_SCHEME_MUXHISTORY = paths.THEME_SCHEME_DIR .. "/muxhistory.ini"
-paths.THEME_SCHEME_MUXCOLLECT = paths.THEME_SCHEME_DIR .. "/muxcollect.ini"
-
-paths.THEME_FONT_DIR = paths.WORKING_THEME_DIR .. "/font"
-paths.THEME_DEFAULT_FONT = paths.THEME_FONT_DIR .. "/default.bin"
-
-paths.THEME_SCHEME_SOURCE_DIR = paths.SCHEME_TEMPLATE_DIR .. "/scheme"
-
-paths.THEME_RGB_CONF = paths.WORKING_THEME_DIR .. "/rgb/rgbconf.sh"
-
-paths.THEME_BOOTLOGO_SOURCE = paths.SOURCE_DIR .. "/assets/icons/muos/logo.svg"
-paths.THEME_LOGO_OUTLINE_SOURCE = paths.SOURCE_DIR .. "/assets/icons/muos/logo_outline.svg"
-
-paths.GLYPH_MAPPING_FILE = paths.SOURCE_DIR .. "/utils/glyph_mapping.txt"
-paths.THEME_GLYPH_SOURCE_DIR = paths.SOURCE_DIR .. "/assets/icons/lucide/glyph"
-
-paths.THEME_IMAGE_DIR = paths.WORKING_THEME_DIR .. "/image"
-paths.THEME_REBOOT_IMAGE = paths.THEME_IMAGE_DIR .. "/reboot.png"
-paths.THEME_REBOOT_ICON_SOURCE = "assets/icons/lucide/ui/refresh-cw.svg"
-paths.THEME_SHUTDOWN_IMAGE = paths.THEME_IMAGE_DIR .. "/shutdown.png"
-paths.THEME_SHUTDOWN_ICON_SOURCE = "assets/icons/lucide/ui/power.svg"
-paths.THEME_CHARGE_IMAGE = paths.THEME_IMAGE_DIR .. "/wall/muxcharge.png"
-paths.THEME_CHARGE_ICON_SOURCE = "assets/icons/lucide/ui/zap.svg"
-paths.THEME_GRID_MUXLAUNCH = paths.THEME_IMAGE_DIR .. "/grid/muxlaunch"
-paths.THEME_GRID_MUXLAUNCH_1024x768 = paths.WORKING_THEME_DIR .. "/1024x768/image/grid/muxlaunch"
-
+paths.UI_ICON_PNG_DIR = paths.SOURCE_DIR .. "/assets/icons/png"
 paths.UI_KOFI_QR_CODE_IMAGE = "assets/images/kofi_qrcode.png"
-paths.UI_HOME_SCREEN_LAYOUT_GRID_IMAGE = "assets/images/home_screen_layout/grid.png"
-paths.UI_HOME_SCREEN_LAYOUT_LIST_IMAGE = "assets/images/home_screen_layout/list.png"
-paths.UI_ICONS_TOGGLE_ENABLED_IMAGE = "assets/images/icons_toggle_samples/icons_enabled.png"
-paths.UI_ICONS_TOGGLE_DISABLED_IMAGE = "assets/images/icons_toggle_samples/icons_disabled.png"
 
+-- Assets copied into generated themes
+paths.THEME_FONT_SOURCE_DIR = paths.SOURCE_DIR .. "/assets/fonts"
+paths.THEME_PICTOGRAM_DIR = paths.SOURCE_DIR .. "/assets/icons/png/lucide/ui"
+
+-- Files inside the working theme
+paths.THEME_CONFIG = paths.WORKING_THEME_DIR .. "/config.json"
+paths.THEME_CREDITS = paths.WORKING_THEME_DIR .. "/README.md"
+paths.THEME_PREVIEW = paths.WORKING_THEME_DIR .. "/preview.png"
+
+-- PyUI resolution sets. The base set (config.json + skin/ + icons/) is always 640x480; every
+-- other size gets config_<W>x<H>.json + skin_<W>x<H>/ + icons_<W>x<H>/. These are the sizes
+-- spruceOS devices actually run at (SPRUCE also ships 752x560, an muOS-era size, not used).
+paths.BASE_RESOLUTION = "640x480"
 paths.SUPPORTED_THEME_RESOLUTIONS = {
-	"640x480",
-	"720x480",
-	"720x576",
-	"720x720",
-	"1024x768",
-	"1280x720",
+	"640x480", -- A30, Mini, Flip, Zero28, Pixel2, RG35XX-H/Plus/SP/2024, RG28XX
+	"720x480", -- RG40XX-H/V
+	"720x720", -- RGB30, RG CubeXX
+	"960x720", -- Miniloong Pocket 1
+	"1024x768", -- TrimUI Brick, Brick Pro
+	"1280x720", -- TrimUI Smart Pro, Smart Pro S
 }
 
-function paths.getThemeResolutionDir(width, height)
-	return string.format("%s/%dx%d", paths.WORKING_THEME_DIR, width, height)
+function paths.resolutionSuffix(width, height)
+	local res = string.format("%dx%d", width, height)
+	if res == paths.BASE_RESOLUTION then
+		return ""
+	end
+	return "_" .. res
 end
 
-function paths.getThemePreviewImagePath(width, height)
-	return paths.getThemeResolutionDir(width, height) .. "/preview.png"
+function paths.getThemeConfigPath(width, height)
+	local res = string.format("%dx%d", width, height)
+	if res == paths.BASE_RESOLUTION then
+		return paths.WORKING_THEME_DIR .. "/config.json"
+	end
+	return paths.WORKING_THEME_DIR .. "/config_" .. res .. ".json"
 end
 
-function paths.getThemeBootlogoImagePath(width, height)
-	return paths.getThemeResolutionDir(width, height) .. "/image/bootlogo.bmp"
+function paths.getThemeSkinDir(width, height)
+	return paths.WORKING_THEME_DIR .. "/skin" .. paths.resolutionSuffix(width, height)
 end
 
-function paths.getThemeMuxlaunchSchemePath(width, height)
-	return paths.getThemeResolutionDir(width, height) .. "/scheme/muxlaunch.ini"
+function paths.getThemeIconsDir(width, height)
+	return paths.WORKING_THEME_DIR .. "/icons" .. paths.resolutionSuffix(width, height)
 end
 
--- Helper to execute a function for all supported resolutions
-function paths.forEachResolution(func)
-	for _, resolution in ipairs(paths.SUPPORTED_THEME_RESOLUTIONS) do
+-- Helper to execute a function for a list of resolutions ("WxH" strings)
+function paths.forEachResolution(resolutions, func)
+	for _, resolution in ipairs(resolutions) do
 		local width, height = resolution:match("(%d+)x(%d+)")
 		width, height = tonumber(width), tonumber(height)
 		local success, err = func(width, height)

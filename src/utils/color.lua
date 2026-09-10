@@ -120,11 +120,14 @@ function color.hexToRgb(hexString)
 	end
 
 	-- Convert hex to RGB (0-1 range)
-	local r = tonumber(hexString:sub(1, 2), 16) / 255
-	local g = tonumber(hexString:sub(3, 4), 16) / 255
-	local b = tonumber(hexString:sub(5, 6), 16) / 255
+	local r = tonumber(hexString:sub(1, 2), 16)
+	local g = tonumber(hexString:sub(3, 4), 16)
+	local b = tonumber(hexString:sub(5, 6), 16)
+	if not (r and g and b) then
+		return 1, 1, 1 -- non-hex characters
+	end
 
-	return r, g, b
+	return r / 255, g / 255, b / 255
 end
 
 -- Convert HSV to RGB values (0-1 range)

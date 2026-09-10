@@ -20,7 +20,8 @@ local Modal = require("ui.components.modal").Modal
 local FocusManager = require("ui.controllers.focus_manager")
 
 local logger = require("utils.logger")
-local rgbUtils = require("utils.rgb")
+local compat = require("spruce.compat")
+local autobuild = require("autobuild")
 
 local menu = {}
 
@@ -61,16 +62,6 @@ local function truncateThemeName(name)
 		return string.sub(name, 1, MAX_NAME_LENGTH - 3) .. "..."
 	end
 	return name
-end
-
--- Helper function to format header opacity value consistently
-local function formatHeaderOpacity(alphaValue)
-	local percent = math.floor((alphaValue / 255) * 100 + 0.5)
-	if percent == 0 then
-		return "0% (Hidden)"
-	else
-		return percent .. "%"
-	end
 end
 
 -- Create all the menu buttons
@@ -142,22 +133,6 @@ local function createMenuButtons()
 		})
 	)
 
-	-- RGB Lighting button (if supported)
-	if state.hasRGBSupport then
-		table.insert(
-			buttons,
-			Button:new({
-				text = "RGB Lighting",
-				type = ButtonTypes.TEXT_PREVIEW,
-				previewText = state.rgbMode,
-				screenWidth = state.screenWidth,
-				onClick = function()
-					screens.switchTo("rgb_lighting")
-				end,
-			})
-		)
-	end
-
 	-- Font Family button
 	table.insert(
 		buttons,
@@ -178,7 +153,7 @@ local function createMenuButtons()
 		Button:new({
 			text = "Icons",
 			type = ButtonTypes.TEXT_PREVIEW,
-			previewText = state.glyphsEnabled and "Enabled" or "Disabled",
+			previewText = state.systemIcons and state.systemIconStyle or "Disabled",
 			screenWidth = state.screenWidth,
 			onClick = function()
 				screens.switchTo("icons")
@@ -186,94 +161,44 @@ local function createMenuButtons()
 		})
 	)
 
-	-- Navigation button
-	local function getNavigationPreviewText()
-		local opacity = state.navigationOpacity and (state.navigationOpacity .. "%") or "100%"
-		if state.navigationOpacity == 0 then
-			return "Hidden"
+	-- Bars button (top bar title, clock, battery, bottom bar hints)
+	local function getBarsPreviewText()
+		local shown = 0
+		for _, key in ipairs({ "showTopBarText", "showClock", "showBattery", "showBottomBar" }) do
+			if state[key] then
+				shown = shown + 1
+			end
 		end
-
-		local alignment = state.navigationAlignment or "Left"
-		return alignment .. " (" .. opacity .. ")"
+		return shown .. " of 4 shown"
 	end
 
 	table.insert(
 		buttons,
 		Button:new({
-			text = "Navigation",
+			text = "Bars",
 			type = ButtonTypes.TEXT_PREVIEW,
-			previewText = getNavigationPreviewText(),
+			previewText = getBarsPreviewText(),
 			screenWidth = state.screenWidth,
 			onClick = function()
-				screens.switchTo("navigation")
+				screens.switchTo("bars")
 			end,
 		})
 	)
 
-	-- Header button
-	local function getHeaderPreviewText()
-		local percent = math.floor((state.headerOpacity / 255) * 100 + 0.5)
-		if percent == 0 then
-			return "Hidden"
-		end
-
-		local alignmentMap = { [0] = "Auto", [1] = "Left", [2] = "Center", [3] = "Right" }
-		local alignment = alignmentMap[state.headerAlignment] or "Center"
-		local opacity = formatHeaderOpacity(state.headerOpacity)
-		return alignment .. " (" .. opacity .. ")"
-	end
-
+	-- spruceOS Options button (PyUI view types and tiles)
 	table.insert(
 		buttons,
 		Button:new({
-			text = "Header",
+			text = "spruceOS Options",
 			type = ButtonTypes.TEXT_PREVIEW,
-			previewText = getHeaderPreviewText(),
+			previewText = state.gameListView,
 			screenWidth = state.screenWidth,
 			onClick = function()
-				screens.switchTo("header")
+				screens.switchTo("spruce_options")
 			end,
 		})
 	)
 
-	-- Datetime button
-	local function getDateTimePreviewText()
-		local percent = math.floor((state.datetimeOpacity / 255) * 100 + 0.5)
-		if percent == 0 then
-			return "Hidden"
-		end
-
-		local alignment = state.timeAlignment or "Left"
-		local opacity = percent .. "%"
-		return alignment .. " (" .. opacity .. ")"
-	end
-
-	table.insert(
-		buttons,
-		Button:new({
-			text = "Time",
-			type = ButtonTypes.TEXT_PREVIEW,
-			previewText = getDateTimePreviewText(),
-			screenWidth = state.screenWidth,
-			onClick = function()
-				screens.switchTo("datetime")
-			end,
-		})
-	)
-
-	-- Status button
-	table.insert(
-		buttons,
-		Button:new({
-			text = "Status",
-			type = ButtonTypes.TEXT_PREVIEW,
-			previewText = state.statusAlignment,
-			screenWidth = state.screenWidth,
-			onClick = function()
-				screens.switchTo("status")
-			end,
-		})
-	)
 	-- Box Art Width button
 	table.insert(
 		buttons,
@@ -406,7 +331,7 @@ local function handleThemeInstallation()
 			.. tostring(waitingThemePath)
 	)
 	if not activeCoroutine then
-		local filename_only = waitingThemePath and waitingThemePath:match("([^/\\]+)%.[^%.]+$")
+		local filename_only = waitingThemePath and waitingThemePath:gsub("/+$", ""):match("([^/\\]+)$")
 		logger.debug("handleThemeInstallation: filename_only=" .. tostring(filename_only))
 		if not filename_only then
 			logger.debug("handleThemeInstallation: No valid filename, aborting.")
@@ -449,7 +374,6 @@ local function handleThemeInstallation()
 		activeCoroutine = nil
 		waitingState = "none"
 		waitingThemePath = nil
-		rgbUtils.installFromTheme()
 		state.themeApplied = true
 
 		modal:show(
@@ -594,6 +518,8 @@ function menu.onEnter(data)
 				modal.onButtonPress = modalButtonHandler
 				focusManager:clearFocus()
 			end
+		elseif button and button.text == "Quit" then
+			love.event.quit()
 		elseif button and button.text == "Exit" then
 			logger.debug("Modal: Exit pressed")
 			modal:hide()
@@ -609,6 +535,20 @@ function menu.onEnter(data)
 		font = fonts.loaded.body,
 		onButtonPress = modalButtonHandler,
 	})
+
+	-- spruceOS compatibility warning, once per session (never in headless runs)
+	if not menu._compatChecked and not autobuild.enabled() then
+		menu._compatChecked = true
+		local result = compat.check()
+		if result.level ~= "ok" then
+			logger.warning("Compatibility: " .. result.message:gsub("\n", " "))
+			modal:show(result.message, {
+				{ text = "Continue", selected = true },
+				{ text = "Quit", selected = false },
+			})
+			focusManager:clearFocus()
+		end
+	end
 
 	-- Create UI components with current state
 	local buttons = createMenuButtons()
@@ -690,7 +630,7 @@ function menu.onEnter(data)
 	if data and type(data) == "table" and data.inputValue then
 		if data.returnScreen == "main_menu" and data.title == "Theme Name" then
 			local cleanThemeName = data.inputValue:gsub("^%s*(.-)%s*$", "%1")
-			state.themeName = "Aesthetic"
+			state.themeName = "Aesthetic Spruce"
 			if cleanThemeName ~= "" then
 				state.themeName = cleanThemeName
 			end
@@ -715,36 +655,17 @@ function menu.onEnter(data)
 		if button.text == "Home Screen Layout" then
 			button:setPreviewText(state.homeScreenLayout)
 		elseif button.text == "Icons" then
-			button:setPreviewText(state.glyphsEnabled and "Enabled" or "Disabled")
-		elseif button.text == "Navigation" then
-			local opacity = state.navigationOpacity and (state.navigationOpacity .. "%") or "100%"
-			if state.navigationOpacity == 0 then
-				button:setPreviewText("Hidden")
-			else
-				local alignment = state.navigationAlignment or "Left"
-				button:setPreviewText(alignment .. " (" .. opacity .. ")")
+			button:setPreviewText(state.systemIcons and state.systemIconStyle or "Disabled")
+		elseif button.text == "Bars" then
+			local shown = 0
+			for _, key in ipairs({ "showTopBarText", "showClock", "showBattery", "showBottomBar" }) do
+				if state[key] then
+					shown = shown + 1
+				end
 			end
-		elseif button.text == "Time" then
-			local percent = math.floor((state.datetimeOpacity / 255) * 100 + 0.5)
-			if percent == 0 then
-				button:setPreviewText("Hidden")
-			else
-				local alignment = state.timeAlignment or "Left"
-				local opacity = percent .. "%"
-				button:setPreviewText(alignment .. " (" .. opacity .. ")")
-			end
-		elseif button.text == "Header" then
-			local percent = math.floor((state.headerOpacity / 255) * 100 + 0.5)
-			if percent == 0 then
-				button:setPreviewText("Hidden")
-			else
-				local alignmentMap = { [0] = "Auto", [1] = "Left", [2] = "Center", [3] = "Right" }
-				local alignment = alignmentMap[state.headerAlignment] or "Center"
-				local opacity = formatHeaderOpacity(state.headerOpacity)
-				button:setPreviewText(alignment .. " (" .. opacity .. ")")
-			end
-		elseif button.text == "Status" then
-			button:setPreviewText(state.statusAlignment)
+			button:setPreviewText(shown .. " of 4 shown")
+		elseif button.text == "spruceOS Options" then
+			button:setPreviewText(state.gameListView)
 		elseif button.text == "Battery" then
 			button.color1Hex = state.getColorValue("batteryActive")
 			button.color2Hex = state.getColorValue("batteryLow")

@@ -29,6 +29,7 @@ Centralized input event manager for UI navigation and actions.
   ]]
 --
 
+local gamepadLayout = require("gamepad_layout")
 local InputConfig = require("ui.controllers.input_config")
 
 local InputManager = {}
@@ -73,8 +74,11 @@ local function createInputManager()
 	end
 
 	-- Internal: Map LÖVE input to logical actions
+	local navOrder -- built on first update, reused every frame
+
 	local function mapInputToActions()
 		local actions = {}
+		local joysticks = love.joystick.getJoysticks() -- once per frame, not once per button
 		for action, mapping in pairs(InputConfig.current) do
 			-- Keyboard
 			if mapping.keyboard then
@@ -87,11 +91,10 @@ local function createInputManager()
 			-- Gamepad
 			if mapping.gamepad then
 				for _, button in ipairs(mapping.gamepad) do
-					if love.joystick and love.joystick.getJoysticks then
-						for _, joy in ipairs(love.joystick.getJoysticks()) do
-							if joy:isGamepadDown(button) then
-								actions[action] = true
-							end
+					local sdlButton = gamepadLayout.sdlButton(button)
+					for _, joy in ipairs(joysticks) do
+						if joy:isGamepadDown(sdlButton) then
+							actions[action] = true
 						end
 					end
 				end
@@ -109,12 +112,14 @@ local function createInputManager()
 		actionStates = mapInputToActions()
 
 		-- Handle repeat logic for navigation actions
-		local navOrder = {
-			{ ACTIONS.NAVIGATE_UP, "up" },
-			{ ACTIONS.NAVIGATE_DOWN, "down" },
-			{ ACTIONS.NAVIGATE_LEFT, "left" },
-			{ ACTIONS.NAVIGATE_RIGHT, "right" },
-		}
+		if not navOrder then
+			navOrder = {
+				{ ACTIONS.NAVIGATE_UP, "up" },
+				{ ACTIONS.NAVIGATE_DOWN, "down" },
+				{ ACTIONS.NAVIGATE_LEFT, "left" },
+				{ ACTIONS.NAVIGATE_RIGHT, "right" },
+			}
+		end
 		navigationDirection = nil
 		for _, nav in ipairs(navOrder) do
 			local action, dir = nav[1], nav[2]

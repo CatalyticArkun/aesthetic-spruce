@@ -7,12 +7,6 @@ local environment = require("utils.environment")
 local system = {}
 local fail = require("utils.fail")
 
--- Helper function to escape pattern special characters
-function system.escapePattern(str)
-	-- Escape these special characters: ^$()%.[]*+-?
-	return str:gsub("[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")
-end
-
 -- Function to check if file exists
 function system.fileExists(path)
 	local file = io.open(path, "r")
@@ -22,112 +16,6 @@ function system.fileExists(path)
 	end
 	logger.warning("File does not exist: " .. path)
 	return false
-end
-
--- Function to find next available filename
-function system.getNextAvailableFilename(basePath)
-	-- Check file existence without setting error
-	local function checkFileExists(path)
-		local file = io.open(path, "r")
-		if file then
-			file:close()
-			return true
-		end
-		return false
-	end
-
-	-- Try without number first
-	if not checkFileExists(basePath) then
-		return basePath
-	end
-
-	-- Extract the extension from the original path
-	local baseName, extension = basePath:match("(.+)(%.[^%.]+)$")
-	if not baseName then
-		baseName = basePath
-		extension = ""
-	end
-
-	local i = 1
-	while true do
-		local newPath = string.format("%s (%d)%s", baseName, i, extension)
-		if not checkFileExists(newPath) then
-			return newPath
-		end
-		i = i + 1
-		local maxAttempts = 100
-		if i > maxAttempts then
-			errorHandler.setError("Failed to find available filename after " .. maxAttempts .. " attempts")
-			return nil
-		end
-	end
-end
-
--- Helper function to replace color in file (text replacement)
-function system.replaceColor(filepath, replacements)
-	local file = io.open(filepath, "r")
-	if not file then
-		errorHandler.setError("Cannot read theme file: " .. filepath)
-		return false
-	end
-
-	local content = file:read("*all")
-	if not content then
-		file:close()
-		errorHandler.setError("Failed to read content from: " .. filepath .. "\nFile may be empty or corrupted")
-		return false
-	end
-	file:close()
-
-	-- Replace each color placeholder
-	local newContent = content
-	local totalReplacements = 0
-
-	for placeholder, hexColor in pairs(replacements) do
-		local escapedPlaceholder = system.escapePattern(placeholder)
-		local pattern = "%%{" .. escapedPlaceholder .. "}"
-		local count
-		newContent, count = string.gsub(newContent, pattern, hexColor)
-		totalReplacements = totalReplacements + count
-	end
-
-	-- Write updated content
-	file = io.open(filepath, "w")
-	if not file then
-		errorHandler.setError("Cannot write to theme file: " .. filepath)
-		return false
-	end
-
-	local success = file:write(newContent)
-	file:close()
-
-	if not success then
-		errorHandler.setError("Failed to write updated content to: " .. filepath)
-		return false
-	end
-
-	return true
-end
-
--- Helper function to create archive with no compression (faster, larger file)
--- @param sourceDir (string): Directory to archive
--- @param outputPath (string): Output archive path (should end with .muxthm)
-function system.createArchive(sourceDir, outputPath)
-	local finalPath = system.getNextAvailableFilename(outputPath)
-	if not finalPath then
-		errorHandler.setError("Failed to get available filename")
-		return false
-	end
-	local zipFlags = "-qr0" -- quiet, recursive, no compression
-	system.ensurePath(finalPath)
-	local cmd = string.format('cd "%s" && zip %s "%s" . -x "*.DS_Store"', sourceDir, zipFlags, finalPath)
-	logger.debug("Creating archive using command: " .. cmd)
-	local result = commands.executeCommand(cmd)
-	if result ~= 0 then
-		errorHandler.setError("Archive creation failed: " .. tostring(result))
-		return false
-	end
-	return finalPath
 end
 
 -- Copy a file or directory using rsync, creating parent directories as needed
@@ -158,17 +46,6 @@ function system.copy(sourcePath, destinationPath)
 	end
 
 	return true
-end
-
--- Deprecated: Use system.copy instead
-function system.copyFile(sourcePath, destinationPath)
-	logger.warning("system.copyFile is deprecated. Use system.copy instead.")
-	return system.copy(sourcePath, destinationPath)
-end
-
-function system.copyDir(src, dest)
-	logger.warning("system.copyDir is deprecated. Use system.copy instead.")
-	return system.copy(src, dest)
 end
 
 --- Ensures a directory exists, creating it if necessary
@@ -329,59 +206,6 @@ function system.writeFile(filePath, content)
 	return true
 end
 
--- Check if RGB lighting is supported on the current device
--- by reading the RGB setting from the device config file
-function system.hasRGBSupport()
-	-- New CFW: /opt/muos/device/config (no extension, contains '0' or '1')
-	local newConfigPath = "/opt/muos/device/config/led/rgb"
-	local file = io.open(newConfigPath, "r")
-	if file then
-		local content = file:read("*all")
-		file:close()
-		if content then
-			content = content:match("^%s*(.-)%s*$") -- trim whitespace
-			if content == "1" then
-				logger.debug("RGB supported (new config, value=1)")
-				return true
-			elseif content == "0" then
-				logger.debug("RGB not supported (new config, value=0)")
-				return false
-			else
-				logger.warning("Unknown value in new RGB config: " .. tostring(content))
-				return false
-			end
-		end
-	end
-
-	-- Old CFW: /opt/muos/device/current/config.ini ([led] section, rgb=1)
-	local oldConfigPath = "/opt/muos/device/current/config.ini"
-	file = io.open(oldConfigPath, "r")
-	if file then
-		local content = file:read("*all")
-		file:close()
-		if content then
-			-- Find the [led] section and check for rgb=1
-			local inLedSection = false
-			for line in content:gmatch("([^\n]*)\n?") do
-				local section = line:match("^%[(.+)%]$")
-				if section then
-					inLedSection = (section == "led")
-				elseif inLedSection then
-					local key, value = line:match("^%s*([%w_]+)%s*=%s*(%d+)%s*$")
-					if key == "rgb" then
-						logger.debug("Found RGB setting in old config: " .. value)
-						return value == "1"
-					end
-				end
-			end
-		end
-	end
-
-	-- If neither config found, default to false (no RGB support)
-	logger.debug("No RGB config found, defaulting to not supported")
-	return false
-end
-
 -- List files in a directory matching a pattern (returns table of filenames, not full paths)
 function system.listFiles(dir, pattern)
 	if not dir or not pattern then
@@ -475,23 +299,6 @@ function system.removeFile(path)
 		return fail("Failed to remove file: " .. tostring(err))
 	end
 	return true
-end
-
-function system.getMuosCodename()
-	local paths = require("paths")
-	local versionFile = paths.MUOS_VERSION_FILE
-	if not versionFile or not system.fileExists(versionFile) then
-		return fail("muOS version file not found")
-	end
-	local content = system.readFile(versionFile)
-	if not content then
-		return fail("Failed to read muOS version file")
-	end
-	local codename = content:match("_(%u+)")
-	if not codename then
-		return fail("Failed to parse system version from muOS version file")
-	end
-	return codename
 end
 
 return system

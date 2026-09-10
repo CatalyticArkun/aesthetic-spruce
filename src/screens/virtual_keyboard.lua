@@ -5,14 +5,13 @@ local fonts = require("ui.fonts")
 local Header = require("ui.components.header")
 local controls = require("control_hints").ControlHints
 local background = require("ui.background")
-local input = require("input")
 local screens = require("screens")
 local Button = require("ui.components.button").Button
 local ButtonTypes = require("ui.components.button").TYPES
 local InputManager = require("ui.controllers.input_manager")
 
 -- Virtual keyboard screen module
--- Its layout closely follows muOS's virtual keyboard layout
+-- Its layout follows the original app's virtual keyboard
 local virtual_keyboard = {}
 
 local headerInstance = Header:new({ title = "Input" })
@@ -226,6 +225,7 @@ end
 
 -- Handle screen entry
 function virtual_keyboard.onEnter(params)
+	params = params or {}
 	headerInstance.title = params.title or "Input"
 
 	-- Reset state
@@ -276,10 +276,6 @@ local function handleKeySelection()
 		inputValue = inputValue .. " "
 	elseif keyLabel == "ABC" or keyLabel == "abc" then
 		switchKeyboardLayer()
-	elseif keyLabel == "BACKSPACE" then
-		if #inputValue > 0 then
-			inputValue = string.sub(inputValue, 1, -2)
-		end
 	elseif keyLabel ~= "" then
 		inputValue = inputValue .. keyLabel
 	end
@@ -500,12 +496,6 @@ function virtual_keyboard.draw()
 	}
 	controlHintsInstance:setControlsList(controlsList)
 	controlHintsInstance:draw()
-end
-
--- The keypressed function is no longer needed since we're using the input module
--- This prevents duplicate input handling
-function love.keypressed(_key)
-	-- Input is handled via input.virtualJoystick
 end
 
 return virtual_keyboard

@@ -34,18 +34,15 @@ local BUTTON_ICONS = {
 	menu = "steamdeck_button_menu_custom",
 }
 
-local function titleCase(str)
-	return str:gsub("(%a)([%w_']*)", function(first, rest)
-		return first:upper() .. rest:lower()
-	end)
-end
-
+local iconsByButton = {}
 local function getButtonIcon(buttonKey)
-	local iconName = BUTTON_ICONS[buttonKey]
-	if iconName then
-		return svg.loadIcon(iconName, ICON_SIZE, paths.CONTROL_HINTS_SOURCE_DIR .. "/")
+	local icon = iconsByButton[buttonKey]
+	if icon == nil then
+		local iconName = BUTTON_ICONS[buttonKey]
+		icon = iconName and svg.loadIcon(iconName, ICON_SIZE, paths.CONTROL_HINTS_SOURCE_DIR .. "/") or false
+		iconsByButton[buttonKey] = icon
 	end
-	return nil
+	return icon or nil
 end
 
 local ControlHints = setmetatable({}, { __index = Component })

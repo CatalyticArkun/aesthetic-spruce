@@ -99,11 +99,10 @@ end
 -- Find next focusable component (fallback when current focus is lost)
 function FocusManager:findNextFocusableComponent()
 	for _, component in ipairs(self.focusableComponents) do
-		if not component.visible or not component.enabled then
+		if component.visible and component.enabled then
+			self:setFocused(component)
 			return
 		end
-		self:setFocused(component)
-		return
 	end
 	self.focusedComponent = nil
 end

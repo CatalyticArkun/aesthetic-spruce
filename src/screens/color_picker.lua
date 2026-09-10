@@ -30,13 +30,13 @@ local function formatColorContext(context)
 		return "Background"
 	elseif context == "foreground" then
 		return "Foreground"
-	elseif context == "rgb" then
-		return "RGB Lighting"
 	else
 		-- Capitalize first letter
 		return context:sub(1, 1):upper() .. context:sub(2)
 	end
 end
+
+local headerInstance = Header:new({ title = "" })
 
 function colorPicker.draw()
 	-- Draw the active sub-screen first, underneath the tabs
@@ -56,8 +56,7 @@ function colorPicker.draw()
 	end
 
 	-- Draw header with current color context
-	local title = formatColorContext(state.activeColorContext)
-	local headerInstance = Header:new({ title = title })
+	headerInstance.title = formatColorContext(state.activeColorContext)
 	headerInstance:draw()
 end
 
@@ -82,7 +81,7 @@ function colorPicker.onEnter(tabName)
 			{ name = "Hex", screen = hexScreen },
 		},
 		width = state.screenWidth - (TAB_BAR_HORIZONTAL_PADDING * 2),
-		height = colorPicker.TAB_HEIGHT,
+		height = TabBar.getHeight(),
 		x = TAB_BAR_HORIZONTAL_PADDING,
 		y = TAB_BAR_START_Y,
 		onTabSwitched = function(tab)
@@ -91,17 +90,9 @@ function colorPicker.onEnter(tabName)
 			end
 		end,
 	})
-	if tabName then
+	-- TabBar:new already activated the first tab; only switch when another one was requested
+	if tabName and tabName ~= "Palette" then
 		tabBar:switchToTab(tabName)
-	else
-		tabBar:switchToTab("Palette")
-	end
-
-	-- Load all sub-screens
-	for _, tab in ipairs(tabBar.tabs) do
-		if tab.screen.load then
-			tab.screen.load()
-		end
 	end
 
 	-- Notify all sub-screens about header height for positioning

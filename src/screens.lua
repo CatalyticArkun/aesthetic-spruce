@@ -42,7 +42,6 @@ function screens.switchTo(screenName, tabName, retVal)
 	-- Validate screen name
 	if not registeredScreens[screenName] then
 		error("Attempting to switch to invalid screen: " .. screenName)
-		return
 	end
 
 	-- Call exit handler on current screen if it exists
@@ -104,9 +103,8 @@ function screens.update(dt)
 
 	local currentModule = registeredScreens[currentScreen]
 	if currentModule and currentModule.update then
-		-- Only call update if cooldown is finished or screen is a modal
-		-- (Modals handle their own input logic and shouldn't be affected by screen transition cooldown)
-		if inputCooldownTimer <= 0 or currentScreen:match("_modal$") then
+		-- Only call update once the screen-transition input cooldown is over
+		if inputCooldownTimer <= 0 then
 			currentModule.update(dt)
 		end
 	end

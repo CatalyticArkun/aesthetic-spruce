@@ -28,7 +28,7 @@ local WARNING_TEXT_FONT = fonts.loaded.caption
 
 -- Display constants
 local EDGE_PADDING = 10
--- This value should match padding applied in `scheme_configurator.lua`, `applyContentWidth` function
+-- Horizontal padding of the preview area
 local RECTANGLE_SPACING = 20
 local CORNER_RADIUS = 12
 
@@ -41,7 +41,6 @@ local tweenObj = { leftWidth = 0, rightWidth = 0 }
 
 -- List handling variables
 local menuList = nil
-local input = nil
 
 -- Create Header instance
 local headerInstance = Header:new({ title = "Box Art Width" })
@@ -96,7 +95,7 @@ local function createMenuButtons()
 				return 1
 			end)(),
 			screenWidth = state.screenWidth,
-			getDisplayText = getDisplayText,
+			displayText = getDisplayText,
 			context = "boxArtWidth",
 		}),
 	}
@@ -125,7 +124,7 @@ function box_art_width.draw()
 
 	-- Draw information text below header
 	local infoText =
-		'This setting applies to the Content, Collection, and History screens and assumes you have set muOS "Content Box Art Alignment" setting to "Bottom Right", "Middle Right", or "Top Right".'
+		'Width of the box art shown next to the game list (PyUI listGameSelectImgWidth). Disabled keeps the PyUI default.'
 	love.graphics.setFont(WARNING_TEXT_FONT)
 	love.graphics.setColor(colors.ui.subtext)
 	local infoY = headerInstance:getContentStartY() + 2
@@ -134,10 +133,9 @@ function box_art_width.draw()
 	love.graphics.setFont(fonts.loaded.body)
 	love.graphics.setColor(colors.ui.foreground)
 
-	-- Calculate dynamic height for info text
-	local font = love.graphics.getFont()
-	local _, wrappedLines = font:getWrap(infoText, infoWidth)
-	local infoHeight = #wrappedLines * font:getHeight()
+	-- Calculate dynamic height for info text (measured with the font it was drawn in)
+	local _, wrappedLines = WARNING_TEXT_FONT:getWrap(infoText, infoWidth)
+	local infoHeight = #wrappedLines * WARNING_TEXT_FONT:getHeight()
 	if menuList then
 		menuList.y = headerInstance:getContentStartY() + infoHeight
 		menuList:draw()
@@ -257,7 +255,7 @@ function box_art_width.update(dt)
 	end
 
 	if menuList then
-		menuList:handleInput(input)
+		menuList:handleInput(InputManager.getNavigationDirection(), nil)
 		menuList:update(dt)
 		local boxArtButton = menuList.items[1]
 		if boxArtButton and boxArtButton.getCurrentOption then

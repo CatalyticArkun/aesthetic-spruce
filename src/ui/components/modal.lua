@@ -285,7 +285,6 @@ function Modal:draw(screenWidth, screenHeight, font)
 
 	local controls = require("control_hints").ControlHints
 	local fonts = require("ui.fonts")
-	local constants = require("ui.components.constants")
 	local controlsHeight = controls.calculateHeight()
 	local padding = 40
 	local maxWidth = screenWidth * 0.9

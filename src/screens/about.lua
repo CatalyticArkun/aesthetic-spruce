@@ -6,6 +6,7 @@ local paths = require("paths")
 local screens = require("screens")
 local state = require("state")
 local version = require("version")
+local compat = require("spruce.compat")
 local InputManager = require("ui.controllers.input_manager")
 
 local background = require("ui.background")
@@ -17,14 +18,18 @@ local about = {}
 -- Constants
 local PADDING = 20
 local MENU_SCREEN = "settings"
-local ABOUT_TEXT_PART1 = "Check out the source code on GitHub!"
-local GITHUB_LINK = "https://github.com/joneavila/aesthetic"
+-- This is an independent fork. Keep the original author's attribution and Ko-fi intact;
+-- direct support to them, not to this fork.
+local ABOUT_TEXT_PART1 = "Unofficial fork of Aesthetic (not affiliated)."
+local GITHUB_LINK = "https://github.com/CatalyticArkun/aesthetic"
 local ABOUT_TEXT_PART2 = [[
 
-Contact:
-@mxdamp (muOS community forum)
-@joneavila (GitHub)]]
-local KOFI_TEXT = "Support the project, donate via Ko-Fi"
+Original app by Jonathan Avila:
+https://github.com/joneavila/aesthetic
+@joneavila (GitHub), @mxdamp (muOS forum)
+
+Made for spruceOS ]] .. compat.SUPPORTED_FAMILY .. ".x, running " .. tostring(compat.currentVersion() or "unknown")
+local KOFI_TEXT = "Support the original author via Ko-fi"
 
 -- Store screen switching function
 local qrCodeImage = nil

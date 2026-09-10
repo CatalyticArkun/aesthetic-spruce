@@ -1,113 +1,143 @@
---- SVG rendering utility functions
+--- Icon drawing utilities (PNG-backed)
 --
--- This module handles SVG rendering using LÖVE and TOVE with proper blend mode handling
---
--- Note on SVG rendering and blend modes:
--- When drawing SVG content to a Canvas using TOVE in LÖVE, we need to handle blend modes carefully:
--- 1. Use "alpha" blend mode when drawing SVG icons to ensure correct color values
--- 2. Use "alpha", "premultiplied" blend mode when displaying the canvas elsewhere
--- 3. Ensure full opacity (1.0) when drawing SVG icons
--- 4. Restore original blend mode when finished
---
--- This approach fixes issues where SVG icons appear darker than text when rendered with the same color.
--- See also: https://www.love2d.org/wiki/Canvas for information on Canvas alpha blending
-
+-- Historically this module rendered SVG files at runtime through TÖVE (libTove.so). That native
+-- library needs glibc 2.38, which is newer than every spruceOS device except the Flip and the
+-- Miniloong, so the fork pre-rasterises the icon set on the host instead
+-- (utils/generate_ui_icon_pngs.py -> assets/icons/png/<set>/<name>.png) and tints the PNGs here
+-- with love.graphics.setColor. The public API is unchanged so call sites did not have to move:
+--   loadIcon(name, size, basePath) -> icon handle (cached per name/size/basePath)
+--   drawIcon(icon, x, y, color, opacity) draws the icon CENTRED on (x, y), like TÖVE did.
+-- The PNGs are white-on-transparent masks rendered at 128 px and scaled down at draw time.
 local love = require("love")
-local tove = require("tove")
 local fail = require("utils.fail")
+local logger = require("utils.logger")
 
 local svg = {}
 
--- Icon cache to prevent reloading SVGs
+local DEFAULT_BASE_PATH = "assets/icons/lucide/ui/"
+
+-- Icon cache keyed by basePath .. name .. size
 local iconCache = {}
+-- Image cache keyed by PNG path so several sizes share one texture
+local imageCache = {}
+
+-- Map an SVG base path (relative "assets/icons/<set>/" or absolute ".../assets/icons/<set>/")
+-- to the rasterised PNG tree "assets/icons/png/<set>/".
+local function pngPathFor(name, basePath)
+	local dir = basePath
+	if not dir:find("assets/icons/png/", 1, true) then
+		dir = dir:gsub("assets/icons/", "assets/icons/png/", 1)
+	end
+	return dir .. name .. ".png"
+end
+
+-- love.graphics.newImage only accepts love.filesystem paths (relative to the game directory);
+-- absolute OS paths (paths.UI_ICON_PNG_DIR on device, or a dev checkout) go through io.open.
+local function newImageFromPath(pngPath)
+	if pngPath:sub(1, 1) ~= "/" then
+		return love.graphics.newImage(pngPath)
+	end
+	local f, err = io.open(pngPath, "rb")
+	if not f then
+		error(err or ("cannot open " .. pngPath))
+	end
+	local bytes = f:read("*a")
+	f:close()
+	local fileData = love.filesystem.newFileData(bytes, pngPath:match("[^/]+$"))
+	return love.graphics.newImage(love.image.newImageData(fileData))
+end
+
+local function loadImage(pngPath)
+	if imageCache[pngPath] == nil then
+		local ok, image = pcall(newImageFromPath, pngPath)
+		if ok and image then
+			image:setFilter("linear", "linear")
+			imageCache[pngPath] = image
+		else
+			imageCache[pngPath] = false
+			logger.error("Failed to load icon PNG: " .. pngPath .. " (" .. tostring(image) .. ")")
+		end
+	end
+	return imageCache[pngPath] or nil
+end
 
 -- Check if an icon is loaded in the cache
 function svg.isIconLoaded(name, size, basePath)
-	basePath = basePath or "assets/icons/lucide/ui/"
+	basePath = basePath or DEFAULT_BASE_PATH
 	size = size or 24
-	local cacheKey = basePath .. name .. "_" .. size
-	return iconCache[cacheKey] ~= nil
+	return iconCache[basePath .. name .. "_" .. size] ~= nil
 end
 
--- Load an SVG icon from file
+-- Load an icon; returns a handle { image, size, scale, ox, oy } or false, err
 function svg.loadIcon(name, size, basePath)
-	basePath = basePath or "assets/icons/lucide/ui/"
+	basePath = basePath or DEFAULT_BASE_PATH
 	size = size or 24
-
 	local cacheKey = basePath .. name .. "_" .. size
-
-	if not iconCache[cacheKey] then
-		local svgPath = basePath .. name .. ".svg"
-		local svgContent = love.filesystem.read(svgPath)
-		if not svgContent then
-			-- Try to read from the real filesystem
-			local f = io.open(svgPath, "r")
-			if f then
-				svgContent = f:read("*a")
-				f:close()
-			end
-		end
-		if svgContent then
-			iconCache[cacheKey] = tove.newGraphics(svgContent, size)
-		else
-			return fail("Failed to load SVG icon: " .. svgPath)
-		end
+	local icon = iconCache[cacheKey]
+	if icon then
+		return icon
 	end
-
-	return iconCache[cacheKey]
+	local pngPath = pngPathFor(name, basePath)
+	local image = loadImage(pngPath)
+	if not image then
+		return fail("Failed to load icon: " .. pngPath)
+	end
+	local w, h = image:getDimensions()
+	icon = {
+		image = image,
+		size = size,
+		scale = size / math.max(w, h),
+		ox = w / 2,
+		oy = h / 2,
+	}
+	iconCache[cacheKey] = icon
+	return icon
 end
 
--- Draw SVG icon with proper blend mode handling
+-- Draw an icon centred on (x, y) tinted with color {r, g, b} at the given opacity
 function svg.drawIcon(icon, x, y, color, opacity)
-	-- Save current graphics state
+	if not icon or not icon.image then
+		return icon
+	end
 	local prevBlendMode, prevAlphaMode = love.graphics.getBlendMode()
 	local prevR, prevG, prevB, prevA = love.graphics.getColor()
 
-	-- Set color through monochrome if provided
-	if color then
-		icon:setMonochrome(color[1], color[2], color[3])
-	end
-
-	-- Set alpha blend mode for SVG drawing
 	love.graphics.setBlendMode("alpha")
+	local r, g, b = 1, 1, 1
+	if color then
+		r, g, b = color[1], color[2], color[3]
+	end
+	love.graphics.setColor(r, g, b, opacity or 1.0)
+	love.graphics.draw(icon.image, x, y, 0, icon.scale, icon.scale, icon.ox, icon.oy)
 
-	-- Draw with full opacity (or specified opacity)
-	opacity = opacity or 1.0
-	love.graphics.setColor(1, 1, 1, opacity)
-
-	-- Draw the icon at the specified position
-	icon:draw(x, y)
-
-	-- Restore original graphics state
 	love.graphics.setBlendMode(prevBlendMode, prevAlphaMode)
 	love.graphics.setColor(prevR, prevG, prevB, prevA)
-
 	return icon
 end
 
--- Draw SVG icon on a canvas with option to control blend mode restoration
-function svg.drawIconOnCanvas(svgData, size, x, y, color, restoreBlendMode)
-	-- Set proper blend mode for drawing to canvas
+-- Draw a PNG icon (by path) centred on (x, y) onto the current canvas.
+-- Kept for the theme renderer, which draws tinted pictograms into skin assets.
+function svg.drawImageOnCanvas(pngPath, size, x, y, color, restoreBlendMode)
 	love.graphics.setBlendMode("alpha")
-
-	local icon = tove.newGraphics(svgData, size)
-	if color then
-		icon:setMonochrome(color[1], color[2], color[3])
+	local image = loadImage(pngPath)
+	if not image then
+		return fail("Failed to load icon: " .. tostring(pngPath))
 	end
-
-	-- Ensure full opacity when drawing SVG
-	love.graphics.setColor(color[1], color[2], color[3], 1.0)
-	icon:draw(x, y)
-
-	-- Restore blend mode to premultiplied alpha for canvas rendering if requested
+	local w, h = image:getDimensions()
+	local scale = size / math.max(w, h)
+	local r, g, b = 1, 1, 1
+	if color then
+		r, g, b = color[1], color[2], color[3]
+	end
+	love.graphics.setColor(r, g, b, 1.0)
+	love.graphics.draw(image, x, y, 0, scale, scale, w / 2, h / 2)
 	if restoreBlendMode then
 		love.graphics.setBlendMode("alpha", "premultiplied")
 	end
-
-	return icon
+	return image
 end
 
--- Draw SVG icon by name directly from the asset path
+-- Draw an icon by name directly from the default asset path
 function svg.drawNamedIcon(name, x, y, color, size, opacity)
 	local icon = svg.loadIcon(name, size)
 	if icon then

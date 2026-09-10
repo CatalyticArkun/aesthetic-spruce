@@ -1,6 +1,4 @@
---- Image generation utilities
---
--- This module handles image generation using LÖVE and TOVE for SVG rendering
+--- Image generation utilities (LÖVE canvases)
 --
 -- Note on Canvas alpha blending:
 -- When drawing content to a Canvas using regular alpha blending in LÖVE,
@@ -20,8 +18,6 @@ local state = require("state")
 local fonts = require("ui.fonts")
 
 local colorUtils = require("utils.color")
-local logger = require("utils.logger")
-local svg = require("utils.svg")
 local system = require("utils.system")
 local fail = require("utils.fail")
 
@@ -45,127 +41,76 @@ function imageGenerator.finishCanvas(previousCanvas)
 	love.graphics.setCanvas(previousCanvas)
 end
 
--- Create an image with centered svg icon and optional text
-function imageGenerator.createIconImage(options)
-	local width = options.width or state.screenWidth
-	local height = options.height or state.screenHeight
-	local bgColor = options.bgColor or colorUtils.hexToLove(state.getColorValue("background"))
-	local fgColor = options.fgColor or colorUtils.hexToLove(state.getColorValue("foreground"))
-	local iconPath = options.iconPath
-	local iconSize = options.iconSize or 100
-	local backgroundLogoPath = options.backgroundLogoPath
-	local backgroundLogoSize = options.backgroundLogoSize or 180
-	local text = options.text
-	local outputPath = options.outputPath
-
-	if not system.ensurePath(outputPath) then
-		return fail("Failed to ensure output path: " .. tostring(outputPath))
-	end
-
-	local svgContent
-	if iconPath then
-		svgContent = system.readFile(iconPath)
-		if not svgContent then
-			return fail("Failed to read SVG file: " .. iconPath)
+-- Undo the premultiplied alpha a canvas leaves in its pixels.
+-- Drawing with the default "alphamultiply" blend mode onto a transparent canvas stores
+-- colour * alpha; encoded as a PNG and composited as straight alpha (PyUI/SDL_image) every
+-- anti-aliased edge pixel then reads darker than the shape, a thin dark seam most visible at
+-- rounded corners and on a plate of the same colour. Only pixels with 0 < a < 255 change.
+local ffi_ok, ffi = pcall(require, "ffi")
+function imageGenerator.unpremultiply(imageData)
+	local w, h = imageData:getDimensions()
+	if ffi_ok and imageData.getFFIPointer and imageData:getFormat() == "rgba8" then
+		local px = ffi.cast("uint8_t*", imageData:getFFIPointer())
+		for i = 0, w * h * 4 - 1, 4 do
+			local a = px[i + 3]
+			if a > 0 and a < 255 then
+				local f = 255 / a
+				local r, g, b = px[i] * f, px[i + 1] * f, px[i + 2] * f
+				px[i] = r > 255 and 255 or r
+				px[i + 1] = g > 255 and 255 or g
+				px[i + 2] = b > 255 and 255 or b
+			end
 		end
+		return imageData
 	end
-
-	local backgroundSvgContent
-	if backgroundLogoPath then
-		backgroundSvgContent = system.readFile(backgroundLogoPath)
-		if not backgroundSvgContent then
-			return fail("Failed to read background SVG file: " .. backgroundLogoPath)
+	imageData:mapPixel(function(_, _, r, g, b, a)
+		if a > 0 and a < 1 then
+			return math.min(1, r / a), math.min(1, g / a), math.min(1, b / a), a
 		end
-	end
+		return r, g, b, a
+	end)
+	return imageData
+end
 
-	local canvas, previousCanvas = imageGenerator.createCanvas(width, height, { 0, 0, 0, 0 })
-	local prevBlendMode, prevAlphaMode = love.graphics.getBlendMode()
-	love.graphics.push("all")
-
-	-- Apply background based on background type
-	if state.backgroundType == "Gradient" then
-		-- Create gradient using our existing function
-		local gradientDirection = state.backgroundGradientDirection or "Vertical"
-		local gradientColor = colorUtils.hexToLove(state.getColorValue("backgroundGradient"))
-
-		-- Create gradient mesh with background color and gradient color
-		local gradientMesh = imageGenerator.createGradientMesh(gradientDirection, bgColor, gradientColor)
-
-		-- Draw gradient filling the entire canvas
-		love.graphics.setColor(1, 1, 1, 1)
-		love.graphics.draw(gradientMesh, 0, 0, 0, width, height)
-	else
-		-- Solid background
-		love.graphics.setColor(bgColor)
-		love.graphics.rectangle("fill", 0, 0, width, height)
-	end
-
-	-- Draw background logo if provided
-	local iconX = width / 2
-	local iconY = height / 2 - (text and 50 or 0)
-
-	if backgroundSvgContent then
-		svg.drawIconOnCanvas(backgroundSvgContent, backgroundLogoSize, iconX, iconY, fgColor, true)
-	end
-
-	-- Draw foreground icon
-	if svgContent then
-		svg.drawIconOnCanvas(svgContent, iconSize, iconX, iconY, fgColor, true)
-	end
-
-	-- Draw text if provided
-	if text then
-		-- Set proper blend mode for text drawing
-		-- Text needs "alpha" blend mode when drawing to canvas
-		love.graphics.setBlendMode("alpha")
-
-		-- Create a larger version of the font
-		local imageFontSize = 28
-		local fontKey = fonts.nameToKey[state.fontFamily]
-		if not fontKey then
-			logger.debug("state.fontFamily: " .. state.fontFamily)
-			return fail("Font mapping not found or initialized")
+-- Give fully transparent pixels the colour of the shape next to them. A canvas leaves them as
+-- (0,0,0,0); when PyUI scales the image, SDL's bilinear filter mixes that black into the visible
+-- edge, darkest at rounded corners (seen on the Apps list). `color` is a LÖVE colour table.
+function imageGenerator.bleedTransparent(imageData, color)
+	local w, h = imageData:getDimensions()
+	local r8 = math.floor(color[1] * 255 + 0.5)
+	local g8 = math.floor(color[2] * 255 + 0.5)
+	local b8 = math.floor(color[3] * 255 + 0.5)
+	if ffi_ok and imageData.getFFIPointer and imageData:getFormat() == "rgba8" then
+		local px = ffi.cast("uint8_t*", imageData:getFFIPointer())
+		for i = 0, w * h * 4 - 1, 4 do
+			if px[i + 3] == 0 then
+				px[i], px[i + 1], px[i + 2] = r8, g8, b8
+			end
 		end
-		local fontDef = fonts.themeDefinitions[fontKey]
-		if not fontDef then
-			return fail("Font definition not found")
-		end
-		local largerFont = love.graphics.newFont(fontDef.ttf, imageFontSize)
-
-		-- Set the font and color
-		love.graphics.setFont(largerFont)
-		love.graphics.setColor(fgColor)
-
-		-- Draw the text centered
-		local textWidth = largerFont:getWidth(text)
-		local textX = (width - textWidth) / 2
-		local textY = height / 2 + 64
-		love.graphics.print(text, textX, textY)
+		return imageData
 	end
+	imageData:mapPixel(function(_, _, r, g, b, a)
+		if a == 0 then
+			return color[1], color[2], color[3], 0
+		end
+		return r, g, b, a
+	end)
+	return imageData
+end
 
-	love.graphics.pop()
-
-	-- Restore original blend mode
-	-- This ensures that any subsequent rendering uses the correct blend mode
-	love.graphics.setBlendMode(prevBlendMode, prevAlphaMode)
-
-	-- Finish canvas operations
-	imageGenerator.finishCanvas(previousCanvas)
-
-	-- Get image data
+-- Encode a canvas to straight-alpha PNG bytes (see unpremultiply); `opaque` skips the fix-ups,
+-- `bleed` (a colour) is written into the transparent pixels
+function imageGenerator.encodeCanvas(canvas, opaque, bleed)
 	local imageData = canvas:newImageData()
-
-	-- Save file (always as PNG)
+	if not opaque then
+		imageGenerator.unpremultiply(imageData)
+		if bleed then
+			imageGenerator.bleedTransparent(imageData, bleed)
+		end
+	end
 	local pngData = imageData:encode("png")
-	if not pngData then
-		return fail("Failed to encode PNG")
-	end
-
-	if not system.writeFile(outputPath, pngData:getString()) then
-		return fail("Failed to write PNG")
-	end
-
-	return true, imageData
+	imageData:release()
+	return pngData
 end
 
 -- Create a gradient mesh usable for various UI elements
@@ -208,11 +153,11 @@ function imageGenerator.createGradientMesh(direction, ...)
 	return love.graphics.newMesh(meshData, "strip", "static")
 end
 
--- Create a preview image for muOS theme selection
-function imageGenerator.createPreviewImage(outputPath)
-	-- See: https://muos.dev/themes/zipping.html#creating-a-preview-image
-	local previewImageWidth = 288
-	local previewImageHeight = 216
+-- Create the preview.png PyUI shows in its theme picker
+function imageGenerator.createPreviewImage(outputPath, width, height, text)
+	-- PyUI shows preview.png in its theme picker; SPRUCE ships 640x480
+	local previewImageWidth = width or 640
+	local previewImageHeight = height or 480
 
 	-- Get colors from state
 	local bgColor = colorUtils.hexToLove(state.getColorValue("background"))
@@ -259,7 +204,7 @@ function imageGenerator.createPreviewImage(outputPath)
 	love.graphics.setFont(font)
 
 	-- Center text
-	local previewImageText = "muOS"
+	local previewImageText = text or state.themeName or "Aesthetic Spruce"
 	local textWidth, textHeight = font:getWidth(previewImageText), font:getHeight()
 	local textX = (previewImageWidth - textWidth) / 2
 	local textY = (previewImageHeight - textHeight) / 2

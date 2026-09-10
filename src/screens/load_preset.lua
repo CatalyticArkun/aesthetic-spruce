@@ -14,14 +14,12 @@ local InputManager = require("ui.controllers.input_manager")
 
 local logger = require("utils.logger")
 local presets = require("utils.presets")
-local rgb = require("utils.rgb")
 
 -- Module table to export public functions
 local loadPreset = {}
 
 -- Local variables for this module
 local menuList
-local input
 
 -- Preset items list
 local presetItems = {}
@@ -79,13 +77,12 @@ local function loadPresetsList()
 					if detail.isValid then
 						local success = presets.loadPreset(detail.name)
 						if success then
-							rgb.updateConfig()
 							screens.switchTo("main_menu")
 						else
 							logger.error("Failed to load preset: " .. detail.name)
 						end
 					else
-						logger.warn("Attempted to load invalid preset: " .. detail.name)
+						logger.warning("Attempted to load invalid preset: " .. detail.name)
 					end
 				end,
 			})
@@ -129,7 +126,7 @@ end
 function loadPreset.update(dt)
 	if menuList then
 		local navDir = InputManager.getNavigationDirection()
-		menuList:handleInput(navDir, input)
+		menuList:handleInput(navDir, nil)
 		menuList:update(dt)
 	end
 	if InputManager.isActionPressed(InputManager.ACTIONS.CANCEL) then

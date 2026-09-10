@@ -16,7 +16,7 @@ TabBar.DEFAULT_TAB_TEXT_PADDING = 1
 TabBar.DEFAULT_FONT_KEY = "body"
 
 function TabBar:new(config)
-	local instance = setmetatable(component.new(self, config), self)
+	local instance = component.new(self, config)
 	instance.tabs = config.tabs or {}
 	instance.onTabSwitched = config.onTabSwitched
 	instance.tabPadding = config.tabPadding or TabBar.DEFAULT_TAB_PADDING
@@ -163,7 +163,6 @@ function TabBar:update(dt)
 end
 
 function TabBar:draw()
-	love.graphics.reset()
 	love.graphics.push("all")
 	-- Draw tab bar background and outline
 	love.graphics.setColor(colors.ui.background_dim[1], colors.ui.background_dim[2], colors.ui.background_dim[3], 0.25)

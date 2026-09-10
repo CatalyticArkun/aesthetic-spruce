@@ -1,39 +1,23 @@
--- Theme preset
--- Vibrant orange and white combo that evokes a summer treat
+-- Theme preset: Vibrant orange and white combo that evokes a summer treat
 return {
 	themeName = "Orange Cream",
-	background = {
-		value = "#FF5A1F",
-		type = "Solid",
-	},
-	backgroundGradient = {
-		value = "#FF5A1F",
-		direction = "Vertical",
-	},
-	foreground = {
-		value = "#FFFFFF",
-	},
-	rgb = {
-		value = "#FF5A1F",
-		mode = "Solid",
-		brightness = 5,
-		speed = 0,
-	},
-	created = os.time(),
-	boxArtWidth = 0,
 	fontFamily = "Nunito",
 	fontSize = "Default",
 	homeScreenLayout = "Grid",
-	headerAlignment = 2,
-	headerOpacity = 0,
-	navigationAlignment = "Left",
-	navigationOpacity = 100,
-	statusAlignment = "Right",
-	timeAlignment = "Left",
-	datetimeOpacity = 255,
-	glyphsEnabled = true,
+	backgroundType = "Solid",
+	backgroundGradientDirection = "Vertical",
+	systemIcons = true,
+	boxArtWidth = 0,
+	showTopBarText = false,
+	showBottomBar = true,
+	showClock = true,
+	showBattery = true,
+	colors = {
+		background = "#FF5A1F",
+		backgroundGradient = "#FF5A1F",
+		foreground = "#FFFFFF",
+		batteryActive = "#4ADE80",
+		batteryLow = "#F87171",
+	},
 	source = "built-in",
-	batteryActive = "#4ADE80",
-	batteryLow = "#F87171",
-	batteryOpacity = 255,
 }

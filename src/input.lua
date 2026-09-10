@@ -4,6 +4,7 @@
 --- to ensure consistent input handling across all screens. Use this function for all navigation and action input
 --- checks. To override, pass a custom delay as the second argument.
 local love = require("love")
+local gamepadLayout = require("gamepad_layout")
 
 local input = {}
 
@@ -55,7 +56,7 @@ function virtualJoystick.isGamepadPressedWithDelay(button, delay)
 	end
 
 	-- Check physical gamepad
-	if joystick and joystick:isGamepadDown(button) then
+	if joystick and joystick:isGamepadDown(gamepadLayout.sdlButton(button)) then
 		isButtonDown = true
 	else
 		-- Check keyboard mappings
@@ -100,7 +101,7 @@ function virtualJoystick.isButtonCombinationPressed(buttons, delay)
 		local isPressed = false
 
 		-- Check physical gamepad
-		if joystick and joystick:isGamepadDown(button) then
+		if joystick and joystick:isGamepadDown(gamepadLayout.sdlButton(button)) then
 			isPressed = true
 		else
 			-- Check keyboard mappings

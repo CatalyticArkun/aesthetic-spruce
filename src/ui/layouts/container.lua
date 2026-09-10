@@ -1,6 +1,7 @@
 --- Container Component
 --- Manages child components and provides layout capabilities
-local Component = require("ui.Component").Component
+local love = require("love")
+local Component = require("ui.component").Component
 local logger = require("utils.logger")
 
 local Container = setmetatable({}, { __index = Component })
@@ -141,10 +142,8 @@ function Container:setPosition(x, y)
 	end
 end
 
-function Container:updateChildPosition(child)
-	-- Convert child's local position to absolute position
-	child.absoluteX = self.x + self.padding.left + child.x
-	child.absoluteY = self.y + self.padding.top + child.y
+function Container:updateChildPosition(_child)
+	-- Children are positioned in screen space by the screens themselves; nothing to derive here.
 end
 
 function Container:updateChildrenPositions()
@@ -291,8 +290,6 @@ end
 
 -- Drawing
 function Container:draw()
-	local love = require("love")
-
 	love.graphics.push("all")
 
 	-- Draw background if specified

@@ -1,39 +1,23 @@
--- Theme preset
--- Classic green-on-black hacker aesthetic
+-- Theme preset: Classic green-on-black hacker aesthetic
 return {
 	themeName = "Terminal",
-	background = {
-		value = "#000000",
-		type = "Solid",
-	},
-	backgroundGradient = {
-		value = "#000000",
-		direction = "Vertical",
-	},
-	foreground = {
-		value = "#00FF00",
-	},
-	rgb = {
-		value = "#00FF00",
-		mode = "Solid",
-		brightness = 5,
-		speed = 0,
-	},
-	created = os.time(),
-	boxArtWidth = 0,
 	fontFamily = "Retro Pixel",
-	fontSize = "Large",
+	fontSize = "Default",
 	homeScreenLayout = "Grid",
-	headerAlignment = 2,
-	headerOpacity = 0,
-	navigationAlignment = "Left",
-	navigationOpacity = 100,
-	statusAlignment = "Right",
-	timeAlignment = "Left",
-	datetimeOpacity = 255,
-	glyphsEnabled = false,
+	backgroundType = "Solid",
+	backgroundGradientDirection = "Vertical",
+	systemIcons = false,
+	boxArtWidth = 0,
+	showTopBarText = false,
+	showBottomBar = true,
+	showClock = true,
+	showBattery = true,
+	colors = {
+		background = "#000000",
+		backgroundGradient = "#000000",
+		foreground = "#00FF00",
+		batteryActive = "#4ADE80",
+		batteryLow = "#F87171",
+	},
 	source = "built-in",
-	batteryActive = "#4ADE80",
-	batteryLow = "#F87171",
-	batteryOpacity = 255,
 }
