@@ -19,10 +19,15 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-MAJOR=$(awk '/version.major =/ {print $3}' src/version.lua)
-MINOR=$(awk '/version.minor =/ {print $3}' src/version.lua)
-PATCH=$(awk '/version.patch =/ {print $3}' src/version.lua)
+MAJOR=$(awk '/^version.major =/ {print $3}' src/version.lua)
+MINOR=$(awk '/^version.minor =/ {print $3}' src/version.lua)
+PATCH=$(awk '/^version.patch =/ {print $3}' src/version.lua)
+PRERELEASE=$(awk '/^version.prerelease =/ {print $3}' src/version.lua | tr -d '"')
 VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+if [ -n "$PRERELEASE" ] && [ "$PRERELEASE" != "nil" ]; then
+  VERSION="${VERSION}-${PRERELEASE}"
+fi
+echo "version: $VERSION"
 
 DIST=dist
 OVERLAY="$DIST/sd-overlay"
@@ -71,6 +76,7 @@ echo "== archives =="
   echo "Unofficial fork of Aesthetic by Jonathan Avila. Support the original author: https://ko-fi.com/F1F51COHHT"
 } > "$OVERLAY/README.txt"
 du -sh "$APP" "$DIST/AestheticSpruce_${VERSION}.7z" "$DIST/AestheticSpruce_${VERSION}_sd-overlay.zip"
+( cd "$DIST" && sha256sum "AestheticSpruce_${VERSION}.7z" "AestheticSpruce_${VERSION}_sd-overlay.zip" > SHA256SUMS.txt && cat SHA256SUMS.txt )
 
 if [ -n "$DEPLOY_HOST" ]; then
   echo "== deploy to $DEPLOY_HOST =="

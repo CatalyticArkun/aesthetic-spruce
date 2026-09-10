@@ -21,7 +21,7 @@ local MENU_SCREEN = "settings"
 -- This is an independent fork. Keep the original author's attribution and Ko-fi intact;
 -- direct support to them, not to this fork.
 local ABOUT_TEXT_PART1 = "Unofficial fork of Aesthetic (not affiliated)."
-local GITHUB_LINK = "https://github.com/CatalyticArkun/aesthetic"
+local GITHUB_LINK = "https://github.com/CatalyticArkun/aesthetic-spruce"
 local ABOUT_TEXT_PART2 = [[
 
 Original app by Jonathan Avila:

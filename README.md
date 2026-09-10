@@ -57,7 +57,7 @@ AESTHETIC_AUTOBUILD=1 AESTHETIC_PRESET=dmg ./dev_launch.sh 1280 720 && python3 u
 - muOS-only parts (launcher, `.muxupd` packaging, LVGL fonts, ImageMagick, RGB, `theme.sh`) are replaced by `spruce/launch.sh`, `build.sh`, TTF fonts, LÖVE canvases and a write to the device's system json.
 - The editor UI, colour pickers, presets and settings are the original code.
 
-**Contributing.** Open an issue or pull request on [this repository](https://github.com/CatalyticArkun/aesthetic). For the muOS app, use the [original repository](https://github.com/joneavila/aesthetic).
+**Contributing.** Open an issue or pull request on [this repository](https://github.com/CatalyticArkun/aesthetic-spruce). For the muOS app, use the [original repository](https://github.com/joneavila/aesthetic).
 
 **AI disclosure.** This port was written with AI assistance (Claude), directed and tested by the maintainer on real devices. Throughout, the original author's attribution, credits and Ko-fi have been kept intact as far as possible; the design and the editor code are Jonathan Avila's work.
 
@@ -84,7 +84,7 @@ AESTHETIC_AUTOBUILD=1 AESTHETIC_PRESET=dmg ./dev_launch.sh 1280 720 && python3 u
 > [!IMPORTANT]
 > Built for **spruceOS 4.3.x** on aarch64 devices (see Devices above). The Miyoo A30 and Mini family are not supported.
 
-1. Get `AestheticSpruce_vX.Y.Z_sd-overlay.zip` from the [Releases](https://github.com/CatalyticArkun/aesthetic/releases) of this repository, or build it with `./build.sh`.
+1. Get `AestheticSpruce_vX.Y.Z_sd-overlay.zip` from the [Releases](https://github.com/CatalyticArkun/aesthetic-spruce/releases) of this repository (stable releases are pinned from tested nightlies; nightlies are marked pre-release), or build it with `./build.sh`.
 2. Unzip it onto the root of the spruceOS card, so that `App/AestheticSpruce` sits next to your other apps.
 3. Launch ***Apps*** > ***Aesthetic Spruce***.
 

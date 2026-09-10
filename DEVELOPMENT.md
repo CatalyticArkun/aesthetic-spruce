@@ -190,6 +190,23 @@ grep -E 'TOUR|CRASH|AUTOBUILD|COMPAT' App/AestheticSpruce/userdata/logs/*.log
 it afterwards. Keep `userdata/` across reinstalls if you want the logs. A crash writes
 `userdata/last_crash.txt`, a line in spruce's log, and returns to PyUI on its own.
 
+## 7a. Releases
+
+Two manual GitHub Actions in `.github/workflows/`:
+
+- **Nightly build** (`nightly.yml`): pick a ref; it stamps `version.prerelease` with
+  `nightly.<date>.<sha>` (so the About screen and file names carry it), runs `build.sh`, uploads the
+  archives as a workflow artifact and, unless `publish` is off, creates a pre-release tagged
+  `nightly-<date>-<sha>` with the zip, the 7z and `SHA256SUMS.txt`.
+- **Stable release** (`release.yml`): give it a nightly tag and a version `X.Y.Z`; it checks out the
+  nightly's exact commit, sets `src/version.lua` to that version with no prerelease, rebuilds, tags
+  the commit `vX.Y.Z` and publishes a normal release whose notes name the nightly. `bump_main`
+  additionally commits the version bump to `main`; otherwise bump `src/version.lua` yourself so the
+  next nightly does not report the old number.
+
+`build.sh` reads `version.prerelease` and writes `dist/SHA256SUMS.txt`, so local builds name their
+files the same way.
+
 ## 8. Devices and libraries
 
 Verified on hardware (tour + build, 2026-09-09): TrimUI Smart Pro S (1280x720), TrimUI Brick Pro

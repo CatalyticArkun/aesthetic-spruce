@@ -67,7 +67,7 @@ local function writeCredits()
 	local content = table.concat({
 		"# " .. state.themeName,
 		"",
-		"Generated on-device by Aesthetic Spruce (unofficial fork): https://github.com/CatalyticArkun/aesthetic",
+		"Generated on-device by Aesthetic Spruce (unofficial fork): https://github.com/CatalyticArkun/aesthetic-spruce",
 		"Based on Aesthetic for muOS by Jonathan Avila: https://github.com/joneavila/aesthetic",
 		"",
 		"Font: " .. tostring(state.fontFamily) .. " (see the licence next to the font in the app's assets/fonts)",

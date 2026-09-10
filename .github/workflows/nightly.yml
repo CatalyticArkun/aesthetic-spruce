@@ -1,0 +1,85 @@
+name: Nightly build
+
+# Manual: builds the chosen ref, stamps the in-app version with a nightly suffix
+# (v1.10.1-nightly.20260909.abc1234) and publishes a pre-release with the SD overlay zip, the
+# on-device 7z and SHA256SUMS. Also keeps the archives as a workflow artifact.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit to build
+        default: main
+        required: true
+      publish:
+        description: Publish a GitHub pre-release (otherwise only a workflow artifact)
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q p7zip-full zip rsync libcairo2
+          python3 -m pip install --quiet cairosvg lupa
+
+      - name: Stamp nightly version
+        id: stamp
+        run: |
+          SHA=$(git rev-parse --short=7 HEAD)
+          DATE=$(date -u +%Y%m%d)
+          SUFFIX="nightly.${DATE}.${SHA}"
+          sed -i "s/^version.prerelease = .*/version.prerelease = \"${SUFFIX}\"/" src/version.lua
+          grep -n '^version\.' src/version.lua
+          echo "suffix=$SUFFIX" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        id: build
+        run: |
+          ./build.sh
+          VERSION=$(ls dist/*_sd-overlay.zip | sed -E 's|.*/AestheticSpruce_(.*)_sd-overlay\.zip|\1|')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          ls -la dist
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AestheticSpruce_${{ steps.build.outputs.version }}
+          path: |
+            dist/*.zip
+            dist/*.7z
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+
+      - name: Publish pre-release
+        if: ${{ inputs.publish }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="nightly-${{ steps.stamp.outputs.date }}-${{ steps.stamp.outputs.sha }}"
+          cat > notes.md <<MD
+          Nightly build of \`${{ inputs.ref }}\` at $(git rev-parse HEAD) on ${{ steps.stamp.outputs.date }}.
+
+          Unzip \`AestheticSpruce_${{ steps.build.outputs.version }}_sd-overlay.zip\` onto the root of the spruceOS card. The in-app version reads ${{ steps.build.outputs.version }}.
+
+          Nightlies are untested snapshots; a stable release is pinned from one of them with the "Stable release" workflow.
+          MD
+          gh release create "$TAG" \
+            --target "$(git rev-parse HEAD)" \
+            --prerelease \
+            --title "Nightly ${{ steps.stamp.outputs.date }} (${{ steps.stamp.outputs.sha }})" \
+            --notes-file notes.md \
+            dist/*.zip dist/*.7z dist/SHA256SUMS.txt
+          echo "published $TAG"
