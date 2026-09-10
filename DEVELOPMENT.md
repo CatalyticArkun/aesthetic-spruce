@@ -198,12 +198,22 @@ Two manual GitHub Actions in `.github/workflows/`:
   `nightly.<date>.<sha>` (so the About screen and file names carry it), runs `build.sh`, uploads the
   archives as a workflow artifact and, unless `publish` is off, creates a pre-release tagged
   `nightly-<date>-<sha>` with the zip, the 7z and `SHA256SUMS.txt`.
-- **Stable release** (`release.yml`): give it a nightly tag and a version `X.Y.Z`; it checks out the
-  nightly's exact commit, sets `src/version.lua` to that version with no prerelease, rebuilds, and
-  publishes a normal release whose notes name the nightly; the Releases API creates the `vX.Y.Z` tag
-  (a workflow token cannot push tags of a tree that contains `.github/workflows`). `bump_main`
-  additionally commits the version bump to `main`; otherwise bump `src/version.lua` yourself so the
-  next nightly does not report the old number.
+- **Stable release** (`release.yml`): promotes a nightly to a stable release. The tag has to exist
+  first, because a workflow token may not create a ref whose workflow files differ from the default
+  branch's, which is exactly what pinning an older commit does (both `git push` and the Releases API
+  refuse it). So:
+
+  ```
+  git fetch origin
+  git tag -a v2.1.0 <nightly commit> -m "Aesthetic Spruce v2.1.0"
+  git push origin v2.1.0
+  ```
+
+  then run the workflow with `version = 2.1.0` and the nightly tag. It checks the tag points at that
+  nightly's commit, checks out the commit, sets `src/version.lua` to the clean version, rebuilds and
+  publishes the release; `bump_main` also commits the version bump to `main` so later nightlies
+  carry the new number. Add a `RELEASE_TOKEN` secret (a PAT with repo and workflow scope) and it
+  creates the tag itself.
 
 `build.sh` reads `version.prerelease` and writes `dist/SHA256SUMS.txt`, so local builds name their
 files the same way.
