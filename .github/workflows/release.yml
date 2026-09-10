@@ -1,16 +1,25 @@
 name: Stable release
 
-# Manual: pins a stable release to the exact commit a nightly was built from. Rebuilds that commit
-# with a clean version (no nightly suffix), tags it vX.Y.Z and publishes a normal release whose
-# notes name the nightly it came from. Optionally pushes the version bump to main.
+# Manual. Publishes a stable release from the exact commit a nightly was built from.
+#
+# The tag has to exist before this runs. GITHUB_TOKEN may not create a ref whose workflow files
+# differ from the default branch's, which is exactly what pinning an older commit does, so the
+# workflow cannot make the tag itself. Create it once from a checkout:
+#
+#   git fetch origin
+#   git tag -a v1.0.0 <nightly commit> -m "Aesthetic Spruce v1.0.0"
+#   git push origin v1.0.0
+#
+# then run this workflow with the same version. Setting a RELEASE_TOKEN secret (a PAT with repo and
+# workflow scope) lets it create the tag for you instead.
 on:
   workflow_dispatch:
     inputs:
-      nightly_tag:
-        description: Nightly release tag to promote (e.g. nightly-20260909-abc1234)
-        required: true
       version:
-        description: Stable version, X.Y.Z (becomes tag vX.Y.Z and the in-app version)
+        description: Stable version, X.Y.Z (tag vX.Y.Z and the in-app version)
+        required: true
+      nightly_tag:
+        description: Nightly release tag this is pinned to (e.g. nightly-20260910-feea1a7)
         required: true
       bump_main:
         description: Also commit the version bump to main
@@ -28,27 +37,49 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Resolve the nightly's commit
-        id: nightly
+      - name: Resolve the nightly commit and the tag
+        id: resolve
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          case "${{ inputs.version }}" in
+          VERSION='${{ inputs.version }}'
+          case "$VERSION" in
             [0-9]*.[0-9]*.[0-9]*) ;;
-            *) echo "version must be X.Y.Z"; exit 1 ;;
+            *) echo "::error::version must be X.Y.Z, got $VERSION"; exit 1 ;;
           esac
-          if git rev-parse "v${{ inputs.version }}" >/dev/null 2>&1; then echo "tag v${{ inputs.version }} already exists"; exit 1; fi
-          gh release view "${{ inputs.nightly_tag }}" --json tagName,targetCommitish,isPrerelease > nightly.json
-          cat nightly.json
-          git fetch --tags origin
-          SHA=$(git rev-parse "${{ inputs.nightly_tag }}^{commit}")
+          TAG="v$VERSION"
+          git fetch --tags --force origin
+          SHA=$(git rev-parse -q --verify '${{ inputs.nightly_tag }}^{commit}') || {
+            echo "::error::no such nightly tag: ${{ inputs.nightly_tag }}"; exit 1; }
+          echo "nightly ${{ inputs.nightly_tag }} is $SHA"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::release $TAG already exists"; exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            TAGGED=$(git rev-parse "$TAG^{commit}")
+            if [ "$TAGGED" != "$SHA" ]; then
+              echo "::error::$TAG points at $TAGGED, not the nightly commit $SHA"; exit 1
+            fi
+            echo "tag $TAG already exists at the nightly commit"
+          elif [ -n "$RELEASE_TOKEN" ]; then
+            GH_TOKEN="$RELEASE_TOKEN" gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref="refs/tags/$TAG" -f sha="$SHA" >/dev/null
+            echo "created tag $TAG with RELEASE_TOKEN"
+          else
+            echo "::error::tag $TAG does not exist and there is no RELEASE_TOKEN secret."
+            echo "::error::Create it from a checkout, then run this workflow again:"
+            echo "::error::  git fetch origin && git tag -a $TAG $SHA -m \"Aesthetic Spruce $TAG\" && git push origin $TAG"
+            exit 1
+          fi
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-          echo "nightly commit: $SHA"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check out that commit and set the stable version
         run: |
-          git checkout --detach "${{ steps.nightly.outputs.sha }}"
-          IFS=. read -r MA MI PA <<< "${{ inputs.version }}"
+          git checkout --detach "${{ steps.resolve.outputs.sha }}"
+          IFS=. read -r MA MI PA <<< "${{ steps.resolve.outputs.version }}"
           sed -i -e "s/^version.major = .*/version.major = $MA/" \
                  -e "s/^version.minor = .*/version.minor = $MI/" \
                  -e "s/^version.patch = .*/version.patch = $PA/" \
@@ -65,24 +96,21 @@ jobs:
         run: |
           ./build.sh
           ls -la dist
-          test -f "dist/AestheticSpruce_v${{ inputs.version }}_sd-overlay.zip"
+          test -f "dist/AestheticSpruce_${{ steps.resolve.outputs.tag }}_sd-overlay.zip"
 
-      - name: Tag and publish
+      - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # The tag is created by the Releases API (--target). A git push of the tag is refused for
-          # GITHUB_TOKEN because the tagged tree contains .github/workflows ("workflows" permission).
           cat > notes.md <<MD
-          Aesthetic Spruce v${{ inputs.version }}, pinned to commit ${{ steps.nightly.outputs.sha }} from nightly \`${{ inputs.nightly_tag }}\`.
+          Aesthetic Spruce ${{ steps.resolve.outputs.tag }}, pinned to commit ${{ steps.resolve.outputs.sha }} from nightly \`${{ inputs.nightly_tag }}\`.
 
-          Install: unzip \`AestheticSpruce_v${{ inputs.version }}_sd-overlay.zip\` onto the root of the spruceOS card so \`App/AestheticSpruce\` sits next to your other apps, then launch it from Apps. Built for spruceOS 4.3.x on aarch64 devices; see the README for the device list.
+          Install: unzip \`AestheticSpruce_${{ steps.resolve.outputs.tag }}_sd-overlay.zip\` onto the root of the spruceOS card so \`App/AestheticSpruce\` sits next to your other apps, then launch it from Apps. Built for spruceOS 4.3.x on aarch64 devices; see the README for the device list.
 
           Unofficial port of Aesthetic by Jonathan Avila; please support the original author: https://ko-fi.com/F1F51COHHT
           MD
-          gh release create "v${{ inputs.version }}" \
-            --target "${{ steps.nightly.outputs.sha }}" \
-            --title "Aesthetic Spruce v${{ inputs.version }}" \
+          gh release create "${{ steps.resolve.outputs.tag }}" \
+            --title "Aesthetic Spruce ${{ steps.resolve.outputs.tag }}" \
             --notes-file notes.md \
             dist/*.zip dist/*.7z dist/SHA256SUMS.txt
 
@@ -95,5 +123,5 @@ jobs:
           git checkout -f main
           cp /tmp/version.lua src/version.lua
           git add src/version.lua
-          git commit -m "Bump version to ${{ inputs.version }}"
+          git commit -m "Bump version to ${{ steps.resolve.outputs.version }}"
           git push origin main
