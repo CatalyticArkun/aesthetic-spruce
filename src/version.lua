@@ -2,10 +2,10 @@
 local version = {}
 
 -- Version components
-version.major = 1
-version.minor = 10
-version.patch = 1
-version.prerelease = nil -- e.g., "beta.1", can be nil for stable releases
+version.major = 2
+version.minor = 0
+version.patch = 0
+version.prerelease = nil
 
 -- Format the version string
 function version.getVersionString()
