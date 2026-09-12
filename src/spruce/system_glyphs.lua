@@ -20,22 +20,22 @@ glyphs.familyGlyph = {
 glyphs.families = {
 	handheld = {
 		"gb", "gbc", "gba", "gg", "lynx", "ngp", "ngpc", "ws", "wsc", "supervision", "megaduck", "poke",
-		"psp", "nds", "vb", "gw",
+		"psp", "nds", "vb", "gw", "j2me",
 	},
 	console = {
 		"fc", "fds", "sfc", "sgb", "sufami", "msu1", "satella", "n64", "md", "ms", "32X", "segasgone", "msumd",
 		"pce", "sgfx", "neogeo", "vdp", "ps", "saturn", "dc", "segacd", "neocd", "pcecd",
-		"atari", "5200", "7800", "col", "itv", "ody", "fairchild", "vectrex",
+		"atari", "5200", "7800", "jaguar", "col", "itv", "ody", "fairchild", "vectrex",
 	},
 	arcade = { "arcade", "mame", "cps1", "cps2", "cps3", "naomi", "atomiswave" },
-	computer = { "amiga", "c64", "cpc", "msx", "x68000", "zxs", "atarist", "atari800", "dos" },
+	computer = { "amiga", "c64", "cpc", "msx", "x68000", "zxs", "atarist", "atari800", "dos", "coco", "pc98" },
 }
 
 -- engines, ports and oddballs that are not a device
 glyphs.overrides = {
 	ports = "package", doom = "crosshair", quake = "crosshair", wolf = "crosshair", openbor = "flame",
 	scummvm = "book-open", easyrpg = "book-text", ffplay = "clapperboard", pico = "sparkles",
-	tic = "sparkles", chai = "coffee", arduboy = "circuit-board", gametank = "cpu", mkxpz = "shapes",
+	tic = "sparkles", chai = "coffee", arduboy = "circuit-board", gametank = "cpu", ["mkxp-z"] = "shapes",
 	dos = "terminal",
 }
 
@@ -46,7 +46,7 @@ glyphs.apps = {
 	led = "lightbulb", menuswitch = "layout-grid", moonlight = "monitor-smartphone", pico8 = "sparkles",
 	portmaster = "package", ppsspp = "gamepad", random = "shuffle", recents = "history",
 	restore = "database-backup", retroarch = "joystick", retroexpert = "wrench", rtc = "clock",
-	scraper = "images", sftpgo = "hard-drive", SSH = "terminal", syncthing = "refresh-cw",
+	scraper = "images", sftpgo = "hard-drive", songo = "music", SSH = "terminal", syncthing = "refresh-cw",
 	themegallery = "palette", updater = "download", usb = "usb",
 	aestheticspruce = "moon-star",
 }
@@ -55,14 +55,15 @@ glyphs.apps = {
 glyphs.names = {
 	["32X"] = "32X", ["5200"] = "Atari 5200", ["7800"] = "Atari 7800", amiga = "Amiga", arcade = "Arcade",
 	arduboy = "Arduboy", atari800 = "Atari 800", atari = "Atari 2600", atarist = "Atari ST",
-	atomiswave = "Atomiswave", c64 = "Commodore 64", chai = "ChaiLove", col = "ColecoVision", cpc = "Amstrad CPC",
-	cps1 = "CPS-1", cps2 = "CPS-2", cps3 = "CPS-3", dc = "Dreamcast", doom = "Doom", dos = "DOS",
-	easyrpg = "EasyRPG", fairchild = "Channel F", fc = "NES", fds = "Famicom Disk System", ffplay = "Video",
-	gametank = "Game Tank", gba = "Game Boy Advance", gbc = "Game Boy Color", gb = "Game Boy", gg = "Game Gear",
-	gw = "Game & Watch", itv = "Intellivision", lynx = "Lynx", mame = "MAME", md = "Genesis", megaduck = "Mega Duck",
-	mkxpz = "MKXP-Z", ms = "Master System", msu1 = "MSU-1", msumd = "MSU-MD", msx = "MSX", n64 = "Nintendo 64",
-	naomi = "Naomi", nds = "Nintendo DS", neocd = "Neo Geo CD", neogeo = "Neo Geo", ngpc = "Neo Geo Pocket Color",
-	ngp = "Neo Geo Pocket", ody = "Odyssey 2", openbor = "OpenBOR", pcecd = "PC Engine CD", pce = "PC Engine",
+	atomiswave = "Atomiswave", c64 = "Commodore 64", chai = "ChaiLove", coco = "CoCo", col = "ColecoVision",
+	cpc = "Amstrad CPC", cps1 = "CPS-1", cps2 = "CPS-2", cps3 = "CPS-3", dc = "Dreamcast", doom = "Doom",
+	dos = "DOS", easyrpg = "EasyRPG", fairchild = "Channel F", fc = "NES", fds = "Famicom Disk System",
+	ffplay = "Video", gametank = "Game Tank", gba = "Game Boy Advance", gbc = "Game Boy Color", gb = "Game Boy",
+	gg = "Game Gear", gw = "Game & Watch", itv = "Intellivision", j2me = "J2ME", jaguar = "Jaguar", lynx = "Lynx",
+	mame = "MAME", md = "Genesis", megaduck = "Mega Duck", ["mkxp-z"] = "MKXP-Z", ms = "Master System",
+	msu1 = "MSU-1", msumd = "MSU-MD", msx = "MSX", n64 = "Nintendo 64", naomi = "Naomi", nds = "Nintendo DS",
+	neocd = "Neo Geo CD", neogeo = "Neo Geo", ngpc = "Neo Geo Pocket Color", ngp = "Neo Geo Pocket",
+	ody = "Odyssey 2", openbor = "OpenBOR", pc98 = "PC-98", pcecd = "PC Engine CD", pce = "PC Engine",
 	pico = "PICO-8", poke = "Pokemon Mini", ports = "Ports", ps = "PlayStation", psp = "PSP", quake = "Quake",
 	satella = "Satellaview", saturn = "Saturn", scummvm = "ScummVM", segacd = "Sega CD", segasgone = "SG-1000",
 	sfc = "Super Nintendo", sgb = "Super Game Boy", sgfx = "SuperGrafx", sufami = "Sufami Turbo",

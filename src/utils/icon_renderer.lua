@@ -15,7 +15,9 @@ local glyphs = require("spruce.system_glyphs")
 local iconRenderer = {}
 
 -- App icons not in the SPRUCE reference set but worth theming (keyed by the app's config.json icon name)
-iconRenderer.EXTRA_APP_ICONS = { "aestheticspruce" }
+iconRenderer.EXTRA_APP_ICONS = { "aestheticspruce", "songo" }
+-- Systems SPRUCE ships no icon for (keyed by the Emu config.json icon name); sized like the others
+iconRenderer.EXTRA_SYSTEM_ICONS = { "coco", "j2me", "pc98" }
 
 -- Glyphs come from the Lucide glyph set; a few names only exist in the smaller UI set
 local function glyphPath(name)
@@ -218,11 +220,19 @@ function iconRenderer.renderIcons(width, height, outDir, progress)
 	local _, ttfPath = pyuiConfig.fontFile()
 	local letters = state.systemIconStyle == "Letter"
 
-	for _, id in ipairs(sortedKeys(systems)) do
+	local systemIds = sortedKeys(systems)
+	-- every SPRUCE system tile has one size; extras without a reference icon take it
+	local standardDims = systems["x68000"] or systems[systemIds[1]]
+	for _, extra in ipairs(iconRenderer.EXTRA_SYSTEM_ICONS) do
+		if not systems[extra] then
+			systemIds[#systemIds + 1] = extra
+		end
+	end
+	for _, id in ipairs(systemIds) do
 		if progress then
 			progress(id)
 		end
-		local dims = systems[id]
+		local dims = systems[id] or standardDims
 		local base = { glyph = glyphs.forSystem(id), scale = scale, ttfPath = ttfPath }
 		if letters and ttfPath then
 			base.letter = glyphs.letterFor(id)
