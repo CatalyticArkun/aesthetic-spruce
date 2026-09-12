@@ -105,7 +105,7 @@ jobs:
           cat > notes.md <<MD
           Aesthetic Spruce ${{ steps.resolve.outputs.tag }}, pinned to commit ${{ steps.resolve.outputs.sha }} from nightly \`${{ inputs.nightly_tag }}\`.
 
-          Install: unzip \`AestheticSpruce_${{ steps.resolve.outputs.tag }}_sd-overlay.zip\` onto the root of the spruceOS card so \`App/AestheticSpruce\` sits next to your other apps, then launch it from Apps. Built for spruceOS 4.3.x on aarch64 devices; see the README for the device list.
+          Install: unzip \`AestheticSpruce_${{ steps.resolve.outputs.tag }}_sd-overlay.zip\` onto the root of the spruceOS card so \`App/AestheticSpruce\` sits next to your other apps, then launch it from Apps. Built for spruceOS 4.3.x and 4.4.x on aarch64 devices; see the README for the device list.
 
           Unofficial port of Aesthetic by Jonathan Avila; please support the original author: https://ko-fi.com/F1F51COHHT
           MD

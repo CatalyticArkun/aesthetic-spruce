@@ -30,11 +30,11 @@ This fork accepts no donations.
 
 Pick colours, a gradient, a font and a layout on the handheld; the app writes a complete PyUI theme to `Themes/<name>` and activates it.
 
-**Devices** (aarch64 spruceOS 4.3.x)
+**Devices** (aarch64 spruceOS 4.3.x and 4.4.x)
 
-- Verified: TrimUI Smart Pro S, TrimUI Brick Pro, Miyoo Flip, Miniloong Pocket 1, Anbernic RG35XX SP, Anbernic RG40XX-class 720x480.
-- Expected: TrimUI Brick and Smart Pro, MagicX Zero28, GKD Pixel2, the rest of the Anbernic RG XX family, RGB30.
-- Not supported: Miyoo A30 and the Mini family (32-bit, no LÖVE runtime).
+- Verified on spruceOS 4.3.6: TrimUI Smart Pro S, TrimUI Brick Pro, Miyoo Flip, Miniloong Pocket 1, Anbernic RG35XX SP, Anbernic RG40XX-class 720x480. On 4.4.0: Miyoo Flip.
+- Expected: TrimUI Brick and Smart Pro, GKD Pixel2, the rest of the Anbernic RG XX family, RGB30. On the RGB30 a Full spruce update resets the active theme to SPRUCE (spruce keeps that setting inside `App/PyUI`, which the update replaces); your theme folder is kept, re-select it under ***Settings*** > ***Theme***.
+- Not supported: Miyoo A30 and the Mini family (32-bit, no LÖVE runtime); MagicX Zero28 (spruceOS 4.4.1's PyUI does not start on it).
 
 **Build and run**
 
@@ -77,12 +77,12 @@ AESTHETIC_AUTOBUILD=1 AESTHETIC_PRESET=dmg ./dev_launch.sh 1280 720 && python3 u
   - **Activate**: switch to the new theme immediately, or later from Settings, Theme
   - **Auto-restore**: the app reopens with your last settings
   - **Presets**: nine built in (*Win95*, *Purple Noir*, *Terminal*, *Vaporwave*, *Orange Cream*, *DMG*, *Fami*, *Bumblebee*, *Mint*), plus your own
-- **Compatibility check**: warns once at start if the card runs a spruceOS release the app was not built for (4.3.x) or PyUI's theme loader has changed
+- **Compatibility check**: warns once at start if the card runs a spruceOS release the app was not built for (anything other than 4.3.x or 4.4.x) or PyUI's theme loader has changed
 
 ## 📦 Installation
 
 > [!IMPORTANT]
-> Built for **spruceOS 4.3.x** on aarch64 devices (see Devices above). The Miyoo A30 and Mini family are not supported.
+> Built for **spruceOS 4.3.x and 4.4.x** on aarch64 devices (see Devices above). The Miyoo A30 and Mini family are not supported.
 
 1. Get `AestheticSpruce_vX.Y.Z_sd-overlay.zip` from the [Releases](https://github.com/CatalyticArkun/aesthetic-spruce/releases) of this repository (stable releases are pinned from tested nightlies; nightlies are marked pre-release), or build it with `./build.sh`.
 2. Unzip it onto the root of the spruceOS card, so that `App/AestheticSpruce` sits next to your other apps.

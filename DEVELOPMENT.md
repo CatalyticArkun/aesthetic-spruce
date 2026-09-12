@@ -1,7 +1,9 @@
 # Developing Aesthetic Spruce
 
 Everything a contributor needs to build, run, change and test the app. Facts here were measured on
-spruceOS 4.3.6 and the devices listed at the end; where something is an assumption it says so.
+spruceOS 4.3.6 (Development nightly of 2026-09-04) and 4.4.0 and the devices listed at the end, and
+checked against the 4.4.1 source (PyUI's theme loader reads the same layout from 4.3.0 to 4.4.1);
+where something is an assumption it says so.
 
 ## 1. What the app is
 
@@ -65,7 +67,8 @@ spruceOS 4.3.6 and the devices listed at the end; where something is an assumpti
 Test hooks (any run): `AESTHETIC_AUTOBUILD=1` builds and quits (`AESTHETIC_PRESET=<name>` loads a preset
 first, `AESTHETIC_AUTOAPPLY=1` also activates), `AESTHETIC_TOUR=1` visits every screen, presses
 Right on the option screens and checks the state changed, `AESTHETIC_SCREENSHOT=/abs/path.png` grabs
-the window after a second and quits. `DEV=true` (set by `dev_launch.sh`) windows the app and points
+the window after a second and quits, `AESTHETIC_COMPAT_WARN=1` makes the compatibility check warn
+(the modal a card on an unsupported spruce release sees; a tour then covers that path too). `DEV=true` (set by `dev_launch.sh`) windows the app and points
 the card paths at `.dev/`.
 
 ## 4. The theme model and how to add an option
@@ -122,6 +125,10 @@ Icons: `system_glyphs.lua` groups system ids into families (handheld, console, a
 with one glyph each, `overrides` for engines and ports, `apps` for app icons, `names` for the
 Letter style. `@handheld`, `@console` and `@tv` are drawn procedurally in `icon_renderer.lua`; every
 other name is a PNG under `assets/icons/png/lucide/{glyph,ui}/`. Unknown ids get the controller.
+The system tiles rendered are SPRUCE's icon list (`skin_spec.lua`) plus
+`icon_renderer.EXTRA_SYSTEM_ICONS`, systems SPRUCE ships no art for (COCO, J2ME, PC-98), at the
+common tile size; `EXTRA_APP_ICONS` does the same for apps (ours, Songo#5). Ids are the basename of
+the `icon` field in `Emu/<SYS>/config.json` or `App/<name>/config.json`.
 
 Composition rules learned from PyUI (`views/grid_view.py`, photos on device):
 
@@ -146,7 +153,7 @@ runtime SVG library upstream used, needs glibc 2.38 and is gone.
 - **Button labels.** SDL's built-in gamepad maps are positional (bottom = "a"); most spruce
   handhelds print Nintendo labels (right = A). PyUI reads evdev with per-device tables
   (`App/PyUI/main-ui/devices/*mapping_provider*.py`); we export the same facts from `launch.sh` and
-  `gamepad_layout.lua` maps "a" to the SDL name to poll. TrimUI, Flip, Zero28: swap A/B and X/Y.
+  `gamepad_layout.lua` maps "a" to the SDL name to poll. TrimUI, Flip, Zero28 (assumed, never run): swap A/B and X/Y.
   Miniloong, Pixel2: swap A/B. Anbernic, RGB30: none (spruce's own map strings are label-based).
   Getting this wrong makes A act as Back, which on the main menu exits the app.
 - **Option screens poll their buttons.** `List:handleInput` hands Left/Right to the focused
@@ -220,11 +227,18 @@ files the same way.
 
 ## 8. Devices and libraries
 
-Verified on hardware (tour + build, 2026-09-09): TrimUI Smart Pro S (1280x720), TrimUI Brick Pro
-(1024x768), Miyoo Flip (640x480), Miniloong Pocket 1 (960x720 rotated), Anbernic RG35XX SP
-(`AnbernicXX640480NoStick`), an Anbernic 720x480 unit (`AnbernicXX720480NoStick`). Expected: Brick,
-Smart Pro, Zero28 (button layout assumed TrimUI-like), Pixel2, other Anbernic RG XX, RGB30. Not
-supported: A30 and the Mini family (32-bit).
+Verified on hardware (tour + build, 2026-09-09, spruceOS 4.3.6 nightly): TrimUI Smart Pro S
+(1280x720), TrimUI Brick Pro (1024x768), Miyoo Flip (640x480), Miniloong Pocket 1 (960x720
+rotated), Anbernic RG35XX SP (`AnbernicXX640480NoStick`), an Anbernic 720x480 unit
+(`AnbernicXX720480NoStick`). On spruceOS 4.4.0 (2026-09-12): Miyoo Flip, tour with the real
+version check and with `AESTHETIC_COMPAT_WARN=1`, then build + apply against the real
+`flip-system.json` (only the theme line changed). Expected: Brick, Smart Pro, Pixel2, other
+Anbernic RG XX, RGB30. On the
+RGB30 spruce keeps the system json at `App/PyUI/config/rgb30-system.json`, which a Full spruce
+update deletes, so the active theme falls back to SPRUCE (the theme folder is kept). Not supported:
+A30 and the Mini family (32-bit); Zero28 (spruce 4.4.1 has the platform, but PyUI has no
+`MAGICX_ZERO28` device and does not start; the button layout in `launch.sh` is an assumption, and
+`spruce/config.json` keeps listing the device on purpose so the app appears if PyUI adds it).
 
 liblove links against SDL2, freetype, openal, z, modplug, vorbisfile/vorbis/ogg, theoradec, mpg123,
 stdc++, gcc_s, c. Bundled and loaded first: liblove, luajit. Never bundled: SDL2 (each platform's
@@ -234,9 +248,12 @@ theoradec, mpg123, modplug; all taken from the spruce release tree, see `lib/fal
 Fleet glibc floor for spruce's own binaries is 2.29; measured devices run 2.33 (TrimUI) and 2.38
 (Flip, Miniloong).
 
-`src/spruce/compat.lua`: `SUPPORTED_FAMILY` (4.3) and `TESTED_VERSIONS`; it also probes
-`App/PyUI/main-ui/themes/theme.py` for the asset and layout names the generator depends on. Bump
-`TESTED_VERSIONS` after verifying a release.
+`src/spruce/compat.lua`: `SUPPORTED_FAMILIES` (4.3, 4.4) and `TESTED_VERSIONS`; it also probes
+`App/PyUI/main-ui/themes/theme.py` for the asset and layout names the generator depends on. Add a
+family only after `git diff --ignore-cr-at-eol <last supported tag> <new tag> --
+App/PyUI/main-ui/themes/theme.py App/PyUI/main-ui/themes/theme_patcher.py` shows no layout change
+(without the flag the CRLF churn hides the real diff). Add a tested version in the commit a
+verified nightly is built from. `AESTHETIC_COMPAT_WARN=1` forces the warning modal.
 
 ## 9. PyUI facts the generator depends on
 

@@ -58,7 +58,7 @@ export_sdl_gamecontroller_map
 # (App/PyUI/main-ui/devices/*mapping_provider*.py); spruce's own Anbernic/RGB30 maps are label-based.
 case "$PLATFORM" in
     Brick | BrickPro | SmartPro | SmartProS | Flip | Zero28)
-        export AESTHETIC_SWAP_AB=1 AESTHETIC_SWAP_XY=1 ;;   # 304->B 305->A 307->Y 308->X (Zero28 assumed TrimUI-like)
+        export AESTHETIC_SWAP_AB=1 AESTHETIC_SWAP_XY=1 ;;   # 304->B 305->A 307->Y 308->X (Zero28 assumed TrimUI-like; PyUI has no Zero28 device at spruce 4.4.1)
     Miniloong | Pixel2)
         export AESTHETIC_SWAP_AB=1 ;;                       # 304->B 305->A, X/Y already in place
 esac
