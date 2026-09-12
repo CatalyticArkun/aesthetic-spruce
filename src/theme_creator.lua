@@ -188,28 +188,55 @@ function themeCreator.createThemeCoroutine()
 end
 
 -- Write the "theme" key of the device system json atomically (temp file + rename), like
--- PyUI's DeviceUserConfig does. The value is the theme FOLDER NAME, not a path.
+-- PyUI's DeviceUserConfig does. The value is the theme FOLDER NAME, not a path. Only that value
+-- is edited, in place: re-encoding the whole file would turn PyUI's empty objects
+-- ("button_mapping": {}) into arrays PyUI cannot read back, drop null keys, and lose the
+-- one-key-per-line layout spruce's shell helpers parse.
 function themeCreator.activateTheme(themeFolderName)
 	local jsonPath = paths.SPRUCE_SYSTEM_JSON
 	if not jsonPath then
 		return fail("No system json path (SPRUCE_SYSTEM_JSON) to record the active theme")
 	end
-	local data = {}
-	local content = system.readFile(jsonPath)
-	if content and content:match("%S") then
+	-- Only a file that does not exist may be created fresh; one we cannot read is never replaced
+	local content = ""
+	local file, openErr, errno = io.open(jsonPath, "r")
+	if file then
+		content = file:read("*a")
+		file:close()
+		if not content then
+			return fail("Could not read " .. jsonPath)
+		end
+	elseif errno ~= 2 then -- ENOENT
+		return fail("Could not read " .. jsonPath .. ": " .. tostring(openErr))
+	end
+	if content:match("%S") then
 		local ok, decoded = pcall(json.decode, content)
 		if not ok or type(decoded) ~= "table" then
 			return fail("System json is not valid JSON: " .. jsonPath)
 		end
-		data = decoded
 	end
-	data.theme = themeFolderName
-	local ok, encoded = pcall(json.encode, data)
-	if not ok then
-		return fail("Failed to encode system json: " .. tostring(encoded))
+	local quoted = json.encode(themeFolderName)
+	local replacement = quoted:gsub("%%", "%%%%")
+	local encoded
+	if content:find('"theme"%s*:%s*"') then
+		encoded = content:gsub('("theme"%s*:%s*)"[^"]*"', "%1" .. replacement, 1)
+	elseif content:find('"theme"%s*:%s*null') then
+		-- PyUI reads null as "not set"
+		encoded = content:gsub('("theme"%s*:%s*)null', "%1" .. replacement, 1)
+	elseif content:find('"theme"%s*:') then
+		-- a non-string value; inserting a second key would leave PyUI reading either one
+		return fail("System json has a theme value that is not a string: " .. jsonPath)
+	elseif not content:match("%S") or content:match("^%s*{%s*}%s*$") then
+		encoded = "{\n        \"theme\": " .. quoted .. "\n}\n"
+	else
+		encoded = content:gsub("{", "{\n        \"theme\": " .. replacement .. ",", 1)
+	end
+	local parsed, check = pcall(json.decode, encoded)
+	if not parsed or type(check) ~= "table" or check.theme ~= themeFolderName then
+		return fail("Could not set the theme in " .. jsonPath .. " without changing anything else")
 	end
 	local tmp = jsonPath .. ".aesthetic.tmp"
-	if not system.writeFile(tmp, encoded .. "\n") then
+	if not system.writeFile(tmp, encoded) then
 		return fail("Failed to write " .. tmp)
 	end
 	local renamed, renameErr = os.rename(tmp, jsonPath)
