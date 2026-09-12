@@ -28,7 +28,7 @@ Original app by Jonathan Avila:
 https://github.com/joneavila/aesthetic
 @joneavila (GitHub), @mxdamp (muOS forum)
 
-Made for spruceOS ]] .. compat.SUPPORTED_FAMILY .. ".x, running " .. tostring(compat.currentVersion() or "unknown")
+Made for spruceOS ]] .. compat.supportedFamiliesText() .. ", running " .. tostring(compat.currentVersion() or "unknown")
 local KOFI_TEXT = "Support the original author via Ko-fi"
 
 -- Store screen switching function

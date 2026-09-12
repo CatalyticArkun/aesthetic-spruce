@@ -1,16 +1,18 @@
 --- spruceOS compatibility check
 ---
 --- This app writes files that only PyUI's theme loader understands, so it is tied to the spruceOS
---- release family it was built and tested against. launch.sh exports SPRUCE_VERSION (from
+--- release families it was built and tested against. launch.sh exports SPRUCE_VERSION (from
 --- helperFunctions.sh get_version, i.e. /mnt/SDCARD/spruce/spruce) and SPRUCE_VERSION_COMPLEX
 --- (nightly tag if any). check() returns { level = "ok" | "warn", message = ... }; a warning is
 --- shown once on the main menu and the user may continue.
 local compat = {}
 
 -- Base versions this build was verified on (hardware runs, theme loaded by PyUI)
-compat.TESTED_VERSIONS = { "4.3.6" }
--- Release family whose PyUI theme format this build targets (major.minor)
-compat.SUPPORTED_FAMILY = "4.3"
+compat.TESTED_VERSIONS = { "4.3.6", "4.4.0" }
+-- Release families (major.minor) whose PyUI theme format this build targets. PyUI's
+-- themes/theme.py and theme_patcher.py read the same layout from 4.3.0 to 4.4.1; 4.3.3 added the
+-- optional screensaver.lowPowerWhileIdle and 4.4.0 the optional screensaver.dimBacklight.
+compat.SUPPORTED_FAMILIES = { "4.3", "4.4" }
 
 local PYUI_THEME_LOADER = "/mnt/SDCARD/App/PyUI/main-ui/themes/theme.py"
 -- Strings the loader must still contain for the generated layout to be understood
@@ -25,6 +27,24 @@ local function parseVersion(v)
 		return nil
 	end
 	return { major = tonumber(major), minor = tonumber(minor), patch = tonumber(patch) or 0, family = major .. "." .. minor }
+end
+
+local function isSupportedFamily(family)
+	for _, supported in ipairs(compat.SUPPORTED_FAMILIES) do
+		if family == supported then
+			return true
+		end
+	end
+	return false
+end
+
+--- "4.3.x or 4.4.x"
+function compat.supportedFamiliesText()
+	local parts = {}
+	for i, family in ipairs(compat.SUPPORTED_FAMILIES) do
+		parts[i] = family .. ".x"
+	end
+	return table.concat(parts, " or ")
 end
 
 local function readFile(path)
@@ -47,6 +67,10 @@ function compat.currentVersion()
 end
 
 function compat.check()
+	-- Test hook: always warn, so dev runs and device tours exercise the warning modal
+	if os.getenv("AESTHETIC_COMPAT_WARN") == "1" then
+		return { level = "warn", message = "Compatibility warning forced by AESTHETIC_COMPAT_WARN=1.\n\nContinue anyway?" }
+	end
 	if os.getenv("DEV") == "true" then
 		return { level = "ok", message = "dev mode" }
 	end
@@ -57,10 +81,10 @@ function compat.check()
 
 	if not parsed then
 		problems[#problems + 1] = "The spruceOS version could not be read (expected /mnt/SDCARD/spruce/spruce)."
-	elseif parsed.family ~= compat.SUPPORTED_FAMILY then
+	elseif not isSupportedFamily(parsed.family) then
 		problems[#problems + 1] = string.format(
-			"This build targets spruceOS %s.x (tested on %s) but this card runs %s.",
-			compat.SUPPORTED_FAMILY, tested, tostring(shown))
+			"This build targets spruceOS %s (tested on %s) but this card runs %s.",
+			compat.supportedFamiliesText(), tested, tostring(shown))
 	end
 
 	local loader = readFile(PYUI_THEME_LOADER)

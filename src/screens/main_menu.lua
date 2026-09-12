@@ -518,6 +518,9 @@ function menu.onEnter(data)
 				modal.onButtonPress = modalButtonHandler
 				focusManager:clearFocus()
 			end
+		elseif button and button.text == "Continue" then
+			modal:hide()
+			focusManager:setFocused(menuList)
 		elseif button and button.text == "Quit" then
 			love.event.quit()
 		elseif button and button.text == "Exit" then
@@ -535,20 +538,6 @@ function menu.onEnter(data)
 		font = fonts.loaded.body,
 		onButtonPress = modalButtonHandler,
 	})
-
-	-- spruceOS compatibility warning, once per session (never in headless runs)
-	if not menu._compatChecked and not autobuild.enabled() then
-		menu._compatChecked = true
-		local result = compat.check()
-		if result.level ~= "ok" then
-			logger.warning("Compatibility: " .. result.message:gsub("\n", " "))
-			modal:show(result.message, {
-				{ text = "Continue", selected = true },
-				{ text = "Quit", selected = false },
-			})
-			focusManager:clearFocus()
-		end
-	end
 
 	-- Create UI components with current state
 	local buttons = createMenuButtons()
@@ -591,6 +580,21 @@ function menu.onEnter(data)
 		focusManager:setFocused(menuList)
 		local validIndex = math.min(math.max(lastFocusState.selectedIndex, 1), #buttons)
 		menuList:setSelectedIndex(validIndex)
+	end
+
+	-- spruceOS compatibility warning, once per session (never in headless runs). Needs the focus
+	-- manager above: the modal takes focus from it.
+	if not menu._compatChecked and not autobuild.enabled() then
+		menu._compatChecked = true
+		local result = compat.check()
+		if result.level ~= "ok" then
+			logger.warning("Compatibility: " .. result.message:gsub("\n", " "))
+			modal:show(result.message, {
+				{ text = "Continue", selected = true },
+				{ text = "Quit", selected = false },
+			})
+			focusManager:clearFocus()
+		end
 	end
 
 	-- Control hints setup
