@@ -71,7 +71,7 @@ echo "== archives =="
   echo "next to your other apps), then launch 'Aesthetic Spruce' from the Apps list."
   echo
   echo "Works on aarch64 spruceOS 4.3.x and 4.4.x devices (TrimUI Smart Pro/Brick family, Miyoo Flip,"
-  echo "Miniloong, Anbernic RG XX family, GKD Pixel2, RGB30). Not for the Miyoo A30, Mini or Zero28."
+  echo "Miniloong, Anbernic RG XX family, GKD Pixel2, RGB30, MagicX on 4.4.2+). Not for the Miyoo A30 or Mini."
   echo
   echo "Unofficial fork of Aesthetic by Jonathan Avila. Support the original author: https://ko-fi.com/F1F51COHHT"
 } > "$OVERLAY/README.txt"

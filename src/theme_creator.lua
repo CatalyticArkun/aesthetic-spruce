@@ -20,6 +20,7 @@ local pyuiConfig = require("utils.pyui_config")
 local skinRenderer = require("utils.skin_renderer")
 local system = require("utils.system")
 local fail = require("utils.fail")
+local skinSpec = require("spruce.skin_spec")
 
 local themeCreator = {}
 
@@ -33,7 +34,9 @@ function themeCreator.sanitizeName(name)
 end
 
 -- Which resolution sets to generate: always the base set, plus the device's own size when it
--- differs, plus everything when state.allResolutions is set.
+-- differs and SPRUCE gives reference sizes for it, plus everything when state.allResolutions is
+-- set. A size SPRUCE has no set for (the Zero40's 480x800 portrait panel) gets the base set only,
+-- which PyUI's ThemePatcher scales on the device, as it does for SPRUCE itself.
 function themeCreator.targetResolutions()
 	local native = string.format("%dx%d", state.screenWidth, state.screenHeight)
 	local list = { paths.BASE_RESOLUTION }
@@ -44,7 +47,11 @@ function themeCreator.targetResolutions()
 			end
 		end
 	elseif native ~= paths.BASE_RESOLUTION then
-		list[#list + 1] = native
+		if skinSpec.skin[native] and skinSpec.icons[native] then
+			list[#list + 1] = native
+		else
+			logger.info("No SPRUCE reference set for " .. native .. "; building the base set only")
+		end
 	end
 	return list
 end

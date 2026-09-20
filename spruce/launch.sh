@@ -55,10 +55,11 @@ export_sdl_gamecontroller_map
 
 # Button labels: SDL's built-in maps are positional (bottom = "a"), these devices print Nintendo
 # labels (right = A). Same facts PyUI uses in its per-device evdev tables
-# (App/PyUI/main-ui/devices/*mapping_provider*.py); spruce's own Anbernic/RGB30 maps are label-based.
+# (App/PyUI/main-ui/devices/*mapping_provider*.py); spruce's own Anbernic/RGB30 maps are label-based,
+# and so are the MagicX ones (Zero28/Zero40/XU20: the platform cfg exports a:b0 = BTN 304 = labelled A).
 case "$PLATFORM" in
-    Brick | BrickPro | SmartPro | SmartProS | Flip | Zero28)
-        export AESTHETIC_SWAP_AB=1 AESTHETIC_SWAP_XY=1 ;;   # 304->B 305->A 307->Y 308->X (Zero28 assumed TrimUI-like; PyUI has no Zero28 device at spruce 4.4.1)
+    Brick | BrickPro | SmartPro | SmartProS | Flip)
+        export AESTHETIC_SWAP_AB=1 AESTHETIC_SWAP_XY=1 ;;   # 304->B 305->A 307->Y 308->X
     Miniloong | Pixel2)
         export AESTHETIC_SWAP_AB=1 ;;                       # 304->B 305->A, X/Y already in place
 esac

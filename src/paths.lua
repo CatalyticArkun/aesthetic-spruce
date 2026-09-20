@@ -50,13 +50,15 @@ paths.THEME_PREVIEW = paths.WORKING_THEME_DIR .. "/preview.png"
 -- PyUI resolution sets. The base set (config.json + skin/ + icons/) is always 640x480; every
 -- other size gets config_<W>x<H>.json + skin_<W>x<H>/ + icons_<W>x<H>/. These are the sizes
 -- spruceOS devices actually run at (SPRUCE also ships 752x560, an muOS-era size, not used).
+-- The MagicX Zero40 runs 480x800 portrait, which SPRUCE has no set for: it gets the base set,
+-- which PyUI's ThemePatcher scales on the device (themeCreator.targetResolutions).
 paths.BASE_RESOLUTION = "640x480"
 paths.SUPPORTED_THEME_RESOLUTIONS = {
 	"640x480", -- A30, Mini, Flip, Zero28, Pixel2, RG35XX-H/Plus/SP/2024, RG28XX
 	"720x480", -- RG40XX-H/V
 	"720x720", -- RGB30, RG CubeXX
 	"960x720", -- Miniloong Pocket 1
-	"1024x768", -- TrimUI Brick, Brick Pro
+	"1024x768", -- TrimUI Brick, Brick Pro, MagicX XU20
 	"1280x720", -- TrimUI Smart Pro, Smart Pro S
 }
 

@@ -25,7 +25,7 @@ where something is an assumption it says so.
 |---|---|
 | `src/main.lua` | LÖVE callbacks, crash handler (logs + returns to PyUI), autobuild/tour/screenshot hooks |
 | `src/conf.lua` | window from `WIDTH`/`HEIGHT`/`ROTATION`, fullscreen desktop on device |
-| `src/display.lua` | renders the logical frame into a canvas and rotates it on portrait panels (Miniloong, RG28XX, Zero28) |
+| `src/display.lua` | renders the logical frame into a canvas and rotates it on portrait panels (Miniloong, RG28XX, Zero28) and the upside-down XU20 (180) |
 | `src/state.lua` | the theme model: `THEME_FIELDS`, `COLOR_FIELDS`, `exportTheme`/`importTheme`, defaults |
 | `src/paths.lua` | every path, derived from the environment contract below |
 | `src/theme_creator.lua` | the build pipeline (coroutine yielding progress) and `activateTheme` |
@@ -52,8 +52,8 @@ where something is an assumption it says so.
 
 | variable | meaning |
 |---|---|
-| `WIDTH`, `HEIGHT` | logical landscape size (`DISPLAY_WIDTH` x `DISPLAY_HEIGHT`) |
-| `ROTATION` | `DISPLAY_ROTATION`; 90/270 makes the physical window portrait, `display.lua` rotates |
+| `WIDTH`, `HEIGHT` | logical size (`DISPLAY_WIDTH` x `DISPLAY_HEIGHT`); landscape everywhere but the Zero40 (480x800) |
+| `ROTATION` | `DISPLAY_ROTATION`; 90/270 makes the physical window portrait, 180 flips it (XU20); `display.lua` rotates |
 | `ROOT_DIR` | the app folder; holds `userdata/` (settings, presets, logs, `last_crash.txt`) and `theme_working/` |
 | `SOURCE_DIR` | `.aesthetic/`, the Lua tree love runs |
 | `THEME_PRESETS_DIR` | built-in presets |
@@ -109,7 +109,8 @@ To add an option:
 `theme_creator.createThemeCoroutine()` yields a progress string per step:
 
 1. Clear `theme_working/`.
-2. For each resolution (`paths.BASE_RESOLUTION` and the native one when different; all six when
+2. For each resolution (`paths.BASE_RESOLUTION`, plus the native one when different and SPRUCE has a
+   set for it; all six when
    `state.allResolutions`): render the skin, render the icons (if `systemIcons`), write the config.
 3. Copy the chosen TTF, render `preview.png` (640x480 with the theme name), write `README.md`.
 4. `mv` the folder into `Themes/<sanitised name>` (next free `(n)` suffix), `sync`.
@@ -153,8 +154,9 @@ runtime SVG library upstream used, needs glibc 2.38 and is gone.
 - **Button labels.** SDL's built-in gamepad maps are positional (bottom = "a"); most spruce
   handhelds print Nintendo labels (right = A). PyUI reads evdev with per-device tables
   (`App/PyUI/main-ui/devices/*mapping_provider*.py`); we export the same facts from `launch.sh` and
-  `gamepad_layout.lua` maps "a" to the SDL name to poll. TrimUI, Flip, Zero28 (assumed, never run): swap A/B and X/Y.
-  Miniloong, Pixel2: swap A/B. Anbernic, RGB30: none (spruce's own map strings are label-based).
+  `gamepad_layout.lua` maps "a" to the SDL name to poll. TrimUI, Flip: swap A/B and X/Y.
+  Miniloong, Pixel2: swap A/B. Anbernic, RGB30, MagicX (Zero28, Zero40, XU20): none (spruce's own
+  map strings are label-based; the MagicX cfgs export `a:b0`, BTN 304, the button labelled A).
   Getting this wrong makes A act as Back, which on the main menu exits the app.
 - **Option screens poll their buttons.** `List:handleInput` hands Left/Right to the focused
   `Button`, which cycles its own option and reports handled, so `onItemOptionCycle` never fires.
@@ -233,12 +235,18 @@ rotated), Anbernic RG35XX SP (`AnbernicXX640480NoStick`), an Anbernic 720x480 un
 (`AnbernicXX720480NoStick`). On spruceOS 4.4.0 (2026-09-12): Miyoo Flip, tour with the real
 version check and with `AESTHETIC_COMPAT_WARN=1`, then build + apply against the real
 `flip-system.json` (only the theme line changed). Expected: Brick, Smart Pro, Pixel2, other
-Anbernic RG XX, RGB30. On the
+Anbernic RG XX, RGB30, and the MagicX Zero28, Zero40 and XU20 (spruceOS 4.4.2 / Development;
+tours and builds pass on a workstation at their geometries, no board has run the app yet). On the
 RGB30 spruce keeps the system json at `App/PyUI/config/rgb30-system.json`, which a Full spruce
 update deletes, so the active theme falls back to SPRUCE (the theme folder is kept). Not supported:
-A30 and the Mini family (32-bit); Zero28 (spruce 4.4.1 has the platform, but PyUI has no
-`MAGICX_ZERO28` device and does not start; the button layout in `launch.sh` is an assumption, and
-`spruce/config.json` keeps listing the device on purpose so the app appears if PyUI adds it).
+A30 and the Mini family (32-bit).
+
+MagicX: PyUI shows an app when its `devices` list names any token the device reports
+(`get_device_names()`); the MagicX boards report their own name plus the family token
+`MAGICX_A133P`, which `spruce/config.json` lists. The Zero40 runs 480x800 portrait, which SPRUCE has
+no set for, so it gets the base set (PyUI's ThemePatcher scales it on the device) and the app lays
+itself out portrait. Their rootfs libraries (glibc, the SDL2 in `/usr/magicx/lib`, the LÖVE media
+libraries) have not been measured.
 
 liblove links against SDL2, freetype, openal, z, modplug, vorbisfile/vorbis/ogg, theoradec, mpg123,
 stdc++, gcc_s, c. Bundled and loaded first: liblove, luajit. Never bundled: SDL2 (each platform's

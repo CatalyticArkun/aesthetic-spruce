@@ -20,7 +20,7 @@ glyphs.familyGlyph = {
 glyphs.families = {
 	handheld = {
 		"gb", "gbc", "gba", "gg", "lynx", "ngp", "ngpc", "ws", "wsc", "supervision", "megaduck", "poke",
-		"psp", "nds", "vb", "gw", "j2me",
+		"psp", "nds", "dsi", "vb", "gw", "j2me",
 	},
 	console = {
 		"fc", "fds", "sfc", "sgb", "sufami", "msu1", "satella", "n64", "md", "ms", "32X", "segasgone", "msumd",
@@ -57,7 +57,7 @@ glyphs.names = {
 	arduboy = "Arduboy", atari800 = "Atari 800", atari = "Atari 2600", atarist = "Atari ST",
 	atomiswave = "Atomiswave", c64 = "Commodore 64", chai = "ChaiLove", coco = "CoCo", col = "ColecoVision",
 	cpc = "Amstrad CPC", cps1 = "CPS-1", cps2 = "CPS-2", cps3 = "CPS-3", dc = "Dreamcast", doom = "Doom",
-	dos = "DOS", easyrpg = "EasyRPG", fairchild = "Channel F", fc = "NES", fds = "Famicom Disk System",
+	dos = "DOS", dsi = "DSi", easyrpg = "EasyRPG", fairchild = "Channel F", fc = "NES", fds = "Famicom Disk System",
 	ffplay = "Video", gametank = "Game Tank", gba = "Game Boy Advance", gbc = "Game Boy Color", gb = "Game Boy",
 	gg = "Game Gear", gw = "Game & Watch", itv = "Intellivision", j2me = "J2ME", jaguar = "Jaguar", lynx = "Lynx",
 	mame = "MAME", md = "Genesis", megaduck = "Mega Duck", ["mkxp-z"] = "MKXP-Z", ms = "Master System",
