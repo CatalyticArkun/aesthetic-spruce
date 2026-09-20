@@ -22,6 +22,8 @@ paths.THEME_PRESETS_DIR = system.getEnvironmentVariable("THEME_PRESETS_DIR")
 paths.SPRUCE_PLATFORM = os.getenv("SPRUCE_PLATFORM") or "unknown"
 paths.SPRUCE_THEMES_DIR = os.getenv("SPRUCE_THEMES_DIR")
 	or (state.isDevMode and (paths.ROOT_DIR .. "/Themes") or "/mnt/SDCARD/Themes")
+-- spruce's default theme; the "SPRUCE Art" icon style recolours its system art
+paths.SPRUCE_REFERENCE_THEME = os.getenv("SPRUCE_REFERENCE_THEME") or (paths.SPRUCE_THEMES_DIR .. "/SPRUCE")
 paths.SPRUCE_SYSTEM_JSON = os.getenv("SPRUCE_SYSTEM_JSON")
 	or (state.isDevMode and (paths.ROOT_DIR .. "/system.json") or nil)
 

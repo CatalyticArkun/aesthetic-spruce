@@ -68,7 +68,7 @@ AESTHETIC_AUTOBUILD=1 AESTHETIC_PRESET=dmg ./dev_launch.sh 1280 720 && python3 u
   - **Colors**: background and foreground from a palette, an HSV picker or a hex code; solid or two-colour gradient background
   - **Battery**: charging and low colours
   - **Font**: *Inter*, *Montserrat*, *Nunito*, *JetBrains Mono*, *Cascadia Code*, *Retro Pixel* or *Bitter*
-  - **Icons**: system icon tiles on or off, drawn as a glyph per family (handheld, TV console, arcade, computer, engines and ports) or as the first letter of the system's name
+  - **Icons**: system icon tiles on or off, drawn as a glyph per family (handheld, TV console, arcade, computer, engines and ports), as the first letter of the system's name, or as SPRUCE's own system art redrawn in the theme's two colours
   - **Bars**: title, clock, battery and button hints, each shown or hidden
   - **Box Art Width**: size of the box art next to the game list
   - **spruceOS Options**: view type for the game list, systems and apps; Recents, Collections and Favorites tiles; index counter; screensaver timeout
@@ -104,7 +104,7 @@ AESTHETIC_AUTOBUILD=1 AESTHETIC_PRESET=dmg ./dev_launch.sh 1280 720 && python3 u
 ### Added by this fork
 
 - Runtime libraries in `lib/fallback/` (OpenAL Soft LGPL-2.0, mpg123 LGPL-2.1, FreeType FTL, libvorbis/libogg/libtheora BSD, libmodplug public domain) taken unmodified from the spruceOS release tree; see [lib/fallback/PROVENANCE.md](lib/fallback/PROVENANCE.md). TÖVE is no longer shipped.
-- Reference dimensions in `src/spruce/skin_spec.lua` are generated from the SPRUCE theme by tenlevels (spruceOS default theme, MIT).
+- Reference dimensions in `src/spruce/skin_spec.lua` are generated from the SPRUCE theme by tenlevels (spruceOS default theme, MIT). The *SPRUCE Art* icon style recolours that theme's system art, read from the card at build time (nothing is bundled); generated themes credit it in their README.
 
 ### Original credits (kept intact from the upstream project)
 

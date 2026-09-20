@@ -11,6 +11,7 @@ local system = require("utils.system")
 local fail = require("utils.fail")
 local skinSpec = require("spruce.skin_spec")
 local glyphs = require("spruce.system_glyphs")
+local logger = require("utils.logger")
 
 local iconRenderer = {}
 
@@ -203,6 +204,118 @@ local function sortedKeys(t)
 end
 
 -- Render icons/<system>.png, icons/sel/<system>.png and icons/app/<app>.png into outDir
+-- "SPRUCE Art" icon style: SPRUCE's own system art, read from the card's SPRUCE theme at build time
+-- (so systems spruce adds come along), recoloured as a two-tone gradient map between the theme's
+-- background and foreground. The art's light parts take the lighter of the two colours, so a drawing
+-- reads the same way on dark and light themes. Unselected tiles use SPRUCE's grey art dimmed toward
+-- the background; selected tiles use its colour art at full contrast, as SPRUCE does.
+local ART_STYLE = "SPRUCE Art"
+local ART_BG_HOLD = 0.1 -- the ramp stops short of the background colour, so no silhouette vanishes
+local ART_DIM = 0.6 -- contrast of unselected tiles
+
+local function luminance(r, g, b)
+	return 0.299 * r + 0.587 * g + 0.114 * b
+end
+
+-- ImageData from an absolute path (love.filesystem only reads inside the game directory), or nil
+local function loadImageData(path)
+	local f = io.open(path, "rb")
+	if not f then
+		return nil
+	end
+	local bytes = f:read("*a")
+	f:close()
+	local ok, data = pcall(love.image.newImageData, love.filesystem.newFileData(bytes, path:match("[^/]+$")))
+	return ok and data or nil
+end
+
+-- SPRUCE's art for one system: the icons_<W>x<H> set for this resolution, else the base set
+local function spruceArtPath(id, resolution, selectedVariant)
+	local sub = selectedVariant and "/sel/" or "/"
+	local dirs = {}
+	if resolution ~= paths.BASE_RESOLUTION then
+		dirs[#dirs + 1] = paths.SPRUCE_REFERENCE_THEME .. "/icons_" .. resolution
+	end
+	dirs[#dirs + 1] = paths.SPRUCE_REFERENCE_THEME .. "/icons"
+	for _, dir in ipairs(dirs) do
+		local path = dir .. sub .. id .. ".png"
+		if system.isFile(path) then
+			return path
+		end
+	end
+	return nil
+end
+
+local function duotone(imageData, bg, fg, contrast)
+	local lo, hi = 1, 0
+	imageData:mapPixel(function(_, _, r, g, b, a)
+		if a > 0.125 then
+			local l = luminance(r, g, b)
+			if l < lo then
+				lo = l
+			end
+			if l > hi then
+				hi = l
+			end
+		end
+		return r, g, b, a
+	end)
+	if hi <= lo then
+		lo, hi = 0, 1
+	end
+	local span = hi - lo
+	local lightBackground = luminance(bg[1], bg[2], bg[3]) > luminance(fg[1], fg[2], fg[3])
+	imageData:mapPixel(function(_, _, r, g, b, a)
+		local t = math.min(1, math.max(0, (luminance(r, g, b) - lo) / span))
+		if lightBackground then
+			t = 1 - t
+		end
+		local s = (ART_BG_HOLD + (1 - ART_BG_HOLD) * t) * contrast
+		return bg[1] + (fg[1] - bg[1]) * s, bg[2] + (fg[2] - bg[2]) * s, bg[3] + (fg[3] - bg[3]) * s, a
+	end)
+end
+
+-- Write one SPRUCE Art tile. Returns true, false when the card has no art for this system, or
+-- nil and an error.
+local function renderArtTileFile(path, id, resolution, selectedVariant, dims)
+	local source = spruceArtPath(id, resolution, selectedVariant)
+	local imageData = source and loadImageData(source)
+	if not imageData then
+		return false
+	end
+	local fg = colorUtils.hexToLove(state.getColorValue("foreground"))
+	local bg = colorUtils.hexToLove(state.getColorValue("background"))
+	duotone(imageData, bg, fg, selectedVariant and 1 or ART_DIM)
+	local pngData
+	if imageData:getWidth() == dims[1] and imageData:getHeight() == dims[2] then
+		pngData = imageData:encode("png")
+	else
+		-- the card's SPRUCE differs from skin_spec: fit the art into the tile, top-aligned
+		local image = love.graphics.newImage(imageData)
+		local canvas = love.graphics.newCanvas(dims[1], dims[2])
+		local previousCanvas = love.graphics.getCanvas()
+		love.graphics.push("all")
+		love.graphics.setCanvas(canvas)
+		love.graphics.clear(0, 0, 0, 0)
+		love.graphics.setColor(1, 1, 1, 1)
+		local s = math.min(dims[1] / image:getWidth(), dims[2] / image:getHeight())
+		love.graphics.draw(image, (dims[1] - image:getWidth() * s) / 2, 0, 0, s, s)
+		love.graphics.setCanvas(previousCanvas)
+		love.graphics.pop()
+		pngData = imageGenerator.encodeCanvas(canvas, false, fg)
+		canvas:release()
+		image:release()
+	end
+	imageData:release()
+	if not pngData then
+		return nil, "Failed to encode icon " .. path
+	end
+	if not system.writeFile(path, pngData:getString()) then
+		return nil, "Failed to write " .. path
+	end
+	return true
+end
+
 function iconRenderer.renderIcons(width, height, outDir, progress)
 	local resolution = string.format("%dx%d", width, height)
 	local systems = skinSpec.icons[resolution]
@@ -219,6 +332,8 @@ function iconRenderer.renderIcons(width, height, outDir, progress)
 	local scale = math.min(width / 640, height / 480)
 	local _, ttfPath = pyuiConfig.fontFile()
 	local letters = state.systemIconStyle == "Letter"
+	local art = state.systemIconStyle == ART_STYLE
+	local withoutArt = {}
 
 	local systemIds = sortedKeys(systems)
 	-- every SPRUCE system tile has one size; extras without a reference icon take it
@@ -233,21 +348,40 @@ function iconRenderer.renderIcons(width, height, outDir, progress)
 			progress(id)
 		end
 		local dims = systems[id] or standardDims
-		local base = { glyph = glyphs.forSystem(id), scale = scale, ttfPath = ttfPath }
-		if letters and ttfPath then
-			base.letter = glyphs.letterFor(id)
-		end
-		base.w, base.h, base.selected = dims[1], dims[2], false
-		local ok, err = renderTileFile(outDir .. "/" .. id .. ".png", base)
-		if not ok then
-			return false, err
-		end
 		local selDims = selected[id] or dims
-		base.w, base.h, base.selected = selDims[1], selDims[2], true
-		ok, err = renderTileFile(outDir .. "/sel/" .. id .. ".png", base)
-		if not ok then
-			return false, err
+		local done = false
+		if art then
+			local ok, err = renderArtTileFile(outDir .. "/" .. id .. ".png", id, resolution, false, dims)
+			if ok then
+				ok, err = renderArtTileFile(outDir .. "/sel/" .. id .. ".png", id, resolution, true, selDims)
+			end
+			if ok == nil then
+				return fail(err)
+			end
+			done = ok
+			if not done then
+				withoutArt[#withoutArt + 1] = id
+			end
 		end
+		if not done then
+			local base = { glyph = glyphs.forSystem(id), scale = scale, ttfPath = ttfPath }
+			if letters and ttfPath then
+				base.letter = glyphs.letterFor(id)
+			end
+			base.w, base.h, base.selected = dims[1], dims[2], false
+			local ok, err = renderTileFile(outDir .. "/" .. id .. ".png", base)
+			if not ok then
+				return false, err
+			end
+			base.w, base.h, base.selected = selDims[1], selDims[2], true
+			ok, err = renderTileFile(outDir .. "/sel/" .. id .. ".png", base)
+			if not ok then
+				return false, err
+			end
+		end
+	end
+	if #withoutArt > 0 then
+		logger.info(string.format("SPRUCE Art %s: no SPRUCE art for %s, glyph tiles used", resolution, table.concat(withoutArt, ", ")))
 	end
 
 	local appNames = sortedKeys(apps)

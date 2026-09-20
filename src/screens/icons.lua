@@ -26,6 +26,17 @@ local function fitList(list)
 	return list
 end
 
+local ICON_STYLES = { "Glyph", "Letter", "SPRUCE Art" }
+
+local function iconStyleIndex()
+	for i, style in ipairs(ICON_STYLES) do
+		if style == state.systemIconStyle then
+			return i
+		end
+	end
+	return 1
+end
+
 local function createButtons()
 	return {
 		Button:new({
@@ -39,8 +50,8 @@ local function createButtons()
 		Button:new({
 			text = "Icon Style",
 			type = ButtonTypes.INDICATORS,
-			options = { "Glyph", "Letter" },
-			currentOptionIndex = state.systemIconStyle == "Letter" and 2 or 1,
+			options = ICON_STYLES,
+			currentOptionIndex = iconStyleIndex(),
 			screenWidth = state.screenWidth,
 			context = "systemIconStyle",
 		}),

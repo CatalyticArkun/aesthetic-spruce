@@ -131,6 +131,14 @@ The system tiles rendered are SPRUCE's icon list (`skin_spec.lua`) plus
 common tile size; `EXTRA_APP_ICONS` does the same for apps (ours, Songo#5). Ids are the basename of
 the `icon` field in `Emu/<SYS>/config.json` or `App/<name>/config.json`.
 
+The *SPRUCE Art* style (`systemIconStyle = "SPRUCE Art"`) takes each system's art from spruce's own
+SPRUCE theme on the card (`paths.SPRUCE_REFERENCE_THEME`, `icons_<W>x<H>/` for the resolution, else
+`icons/`; override with `SPRUCE_REFERENCE_THEME=<dir>` on a workstation) and redraws it as a two-tone
+gradient map: luminance, stretched per icon, runs from the background colour (held back by
+`ART_BG_HOLD` so silhouettes never vanish) to the foreground, flipped on light themes so light parts
+stay light. Unselected tiles use SPRUCE's grey art at `ART_DIM` contrast, selected tiles its colour
+art at full contrast. Systems without SPRUCE art (COCO, J2ME, PC-98) fall back to glyph tiles.
+
 Composition rules learned from PyUI (`views/grid_view.py`, photos on device):
 
 - PyUI draws the label under main-menu and system tiles at a fixed height, so tile plates occupy

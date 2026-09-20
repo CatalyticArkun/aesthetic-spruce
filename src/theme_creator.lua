@@ -79,7 +79,9 @@ local function writeCredits()
 		"",
 		"Font: " .. tostring(state.fontFamily) .. " (see the licence next to the font in the app's assets/fonts)",
 		"Icons: Lucide (ISC), Kenney Input Prompts (CC0)",
-		"",
+		(state.systemIcons and state.systemIconStyle == "SPRUCE Art")
+				and "System icons: art from spruceOS's SPRUCE theme by tenlevels (MIT), recoloured in two tones\n"
+			or "",
 	}, "\n")
 	return system.createTextFile(paths.THEME_CREDITS, content)
 end

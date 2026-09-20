@@ -31,7 +31,7 @@ state.THEME_FIELDS = {
 	{ key = "backgroundType", type = "string", default = "Gradient" }, -- "Solid" | "Gradient"
 	{ key = "backgroundGradientDirection", type = "string", default = "Vertical" }, -- "Vertical" | "Horizontal"
 	{ key = "systemIcons", type = "boolean", default = true }, -- emit icons/ and use grid system select
-	{ key = "systemIconStyle", type = "string", default = "Glyph" }, -- "Glyph" (family glyph) | "Letter" (first letter of the name)
+	{ key = "systemIconStyle", type = "string", default = "Glyph" }, -- "Glyph" (family glyph) | "Letter" (first letter of the name) | "SPRUCE Art" (SPRUCE's art in two tones)
 	{ key = "boxArtWidth", type = "number", default = 0 }, -- 0 = PyUI default
 	{ key = "showTopBarText", type = "boolean", default = true }, -- PyUI showTopBarText
 	{ key = "showBottomBar", type = "boolean", default = true }, -- PyUI showBottomBar
