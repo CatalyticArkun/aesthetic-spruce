@@ -243,9 +243,11 @@ Verified on hardware (tour + build, 2026-09-09, spruceOS 4.3.6 nightly): TrimUI 
 rotated), Anbernic RG35XX SP (`AnbernicXX640480NoStick`), an Anbernic 720x480 unit
 (`AnbernicXX720480NoStick`). On spruceOS 4.4.0 (2026-09-12): Miyoo Flip, tour with the real
 version check and with `AESTHETIC_COMPAT_WARN=1`, then build + apply against the real
-`flip-system.json` (only the theme line changed). Expected: Brick, Smart Pro, Pixel2, other
-Anbernic RG XX, RGB30, and the MagicX Zero28, Zero40 and XU20 (spruceOS 4.4.2 / Development;
-tours and builds pass on a workstation at their geometries, no board has run the app yet). On the
+`flip-system.json` (only the theme line changed). On spruceOS 4.4.3 (2026-09-27): MagicX Zero 28
+(640x480; the panel is rotated in the kernel now, so `DISPLAY_ROTATION` is 0 and the app renders
+upright without rotating anything itself) and MagicX Zero 40 (480x800 portrait, which builds its
+own `skin_480x800` set), both tour + build + apply against the real system json. Expected: Brick,
+Smart Pro, Pixel2, other Anbernic RG XX, RGB30 and the MagicX XU20. On the
 RGB30 spruce keeps the system json at `App/PyUI/config/rgb30-system.json`, which a Full spruce
 update deletes, so the active theme falls back to SPRUCE (the theme folder is kept). Not supported:
 A30 and the Mini family (32-bit).

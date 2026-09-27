@@ -8,7 +8,7 @@
 local compat = {}
 
 -- Base versions this build was verified on (hardware runs, theme loaded by PyUI)
-compat.TESTED_VERSIONS = { "4.3.6", "4.4.0" }
+compat.TESTED_VERSIONS = { "4.3.6", "4.4.0", "4.4.3" }
 -- Release families (major.minor) whose PyUI theme format this build targets. PyUI's
 -- themes/theme.py and theme_patcher.py read the same layout from 4.3.0 to 4.4.1; 4.3.3 added the
 -- optional screensaver.lowPowerWhileIdle and 4.4.0 the optional screensaver.dimBacklight.
