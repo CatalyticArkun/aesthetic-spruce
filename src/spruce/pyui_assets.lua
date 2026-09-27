@@ -46,6 +46,8 @@ return {
 
 	["missing_image"] = { kind = "pictogram", icon = "lucide/glyph/image", scale = 0.5, alpha = 0.6 },
 	["ic-favorite-mark"] = { kind = "pictogram", icon = "lucide/glyph/star", scale = 0.9 },
+	-- PyUI 4.4.3 marks games with achievements; a theme without it falls back to SPRUCE's own art
+	["ic-cheevos-mark"] = { kind = "pictogram", icon = "lucide/glyph/trophy", scale = 0.9 },
 
 	-- SPRUCE ships these two as transparent 640x54 strips (hides the hint); PyUI draws the image at
 	-- its natural size and puts the text after it, so ours are compact buttons (dims at 640x480).
