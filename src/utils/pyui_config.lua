@@ -48,6 +48,14 @@ local function px(base, scale)
 	return math.max(8, math.floor(base * scale + 0.5))
 end
 
+-- PyUI defaults the system grid to 4 columns by 2 rows (scaled). SPRUCE overrides that on the two
+-- panels where it reads badly: 4x3 on the 720x720 squares, 3x3 on the Zero 40's portrait panel.
+-- Generated themes follow it, and leave PyUI's default alone everywhere else.
+local SYSTEM_GRID = {
+	["720x720"] = { cols = 4, rows = 3 },
+	["480x800"] = { cols = 3, rows = 3 },
+}
+
 function pyuiConfig.build(width, height)
 	local fontFile = pyuiConfig.fontFile()
 	if not fontFile then
@@ -107,6 +115,12 @@ function pyuiConfig.build(width, height)
 		local w = px(state.boxArtWidth, s)
 		cfg.listGameSelectImgWidth = w
 		cfg.listGameSelectImgHeight = w
+	end
+
+	local systemGrid = SYSTEM_GRID[string.format("%dx%d", width, height)]
+	if systemGrid then
+		cfg.gameSystemSelectColCount = systemGrid.cols
+		cfg.gameSystemSelectRowCount = systemGrid.rows
 	end
 
 	return cfg
