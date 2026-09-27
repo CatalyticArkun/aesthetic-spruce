@@ -110,14 +110,15 @@ To add an option:
 
 1. Clear `theme_working/`.
 2. For each resolution (`paths.BASE_RESOLUTION`, plus the native one when different and SPRUCE has a
-   set for it; all six when
+   set for it; all seven when
    `state.allResolutions`): render the skin, render the icons (if `systemIcons`), write the config.
 3. Copy the chosen TTF, render `preview.png` (640x480 with the theme name), write `README.md`.
 4. `mv` the folder into `Themes/<sanitised name>` (next free `(n)` suffix), `sync`.
 
 Skin: `pyui_assets.lua` lists the ~47 assets PyUI actually reads (grep of every `"<name>.qoi|png"`
 literal in `App/PyUI/main-ui`) with a `kind` (background, bar, plate, frame, panel, pictogram,
-tile, empty) and options; `skin_spec.lua` gives each asset's size per resolution, generated from
+tile, empty) and options; `skin_spec.lua` gives each asset's size per resolution (regenerate it when spruce changes SPRUCE:
+the 4.4.3 tree added the Zero 40's 480x800 set and `ic-cheevos-mark`), generated from
 spruce's SPRUCE theme by `utils/generate_skin_spec.py` (regenerate when spruce changes SPRUCE).
 Exceptions: `background` is always the full screen (PyUI's patcher rule; SPRUCE's own 1280x720 file
 is 960x720), `icon-A-54`/`icon-B-54` are compact buttons (SPRUCE ships transparent 640x54 strips).
@@ -277,6 +278,8 @@ verified nightly is built from. `AESTHETIC_COMPAT_WARN=1` forces the warning mod
 - `config_<W>x<H>.json` + `skin_<W>x<H>/` + `icons_<W>x<H>/` are the per-resolution set; without
   them PyUI rescales the base set on device (`ThemePatcher`) and restarts, which is slow.
 - Assets resolve `.qoi` then `.png`; misses are cached.
+- PyUI's system grid defaults to 4 columns by 2 rows; SPRUCE overrides it per panel (4x3 at
+  720x720, 3x3 at 480x800) and `pyui_config.SYSTEM_GRID` follows, leaving the default elsewhere.
 - Config enums must be spelled exactly (`GRID`, `TEXT_ONLY`, `TEXT_AND_IMAGE`, `ICON_AND_DESC`,
   `FULLSCREEN_GRID`, `CAROUSEL`); anything else silently falls back to PyUI defaults.
 - The active theme is the folder name in the `theme` key of `$SYSTEM_JSON`; PyUI applies it live or

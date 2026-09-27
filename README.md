@@ -30,7 +30,7 @@ This fork accepts no donations.
 
 Pick colours, a gradient, a font and a layout on the handheld; the app writes a complete PyUI theme to `Themes/<name>` and activates it.
 
-**Devices** (aarch64 spruceOS 4.3.x and 4.4.x)
+**Devices** (aarch64 spruceOS 4.3.x and 4.4.x, tracked to 4.4.3)
 
 - Verified on spruceOS 4.3.6: TrimUI Smart Pro S, TrimUI Brick Pro, Miyoo Flip, Miniloong Pocket 1, Anbernic RG35XX SP, Anbernic RG40XX-class 720x480. On 4.4.0: Miyoo Flip.
 - Expected: TrimUI Brick and Smart Pro, GKD Pixel2, the rest of the Anbernic RG XX family, RGB30, and the MagicX Zero28, Zero 40 and XU20 (these need spruceOS 4.4.2 or a Development build; 4.4.1 has no MagicX support in its menu). On the RGB30 a Full spruce update resets the active theme to SPRUCE (spruce keeps that setting inside `App/PyUI`, which the update replaces); your theme folder is kept, re-select it under ***Settings*** > ***Theme***.
