@@ -4,7 +4,7 @@ local version = {}
 -- Version components
 version.major = 1
 version.minor = 0
-version.patch = 2
+version.patch = 3
 version.prerelease = nil
 
 -- Format the version string
