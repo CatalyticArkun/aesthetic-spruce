@@ -31,8 +31,9 @@ This fork accepts no donations.
 Pick colours, a gradient, a font and a layout on the handheld; the app writes a complete PyUI theme to `Themes/<name>` and activates it.
 
 <div align="center">
-  <img alt="spruceOS main menu in thirteen of the built-in presets" src=".github/main-menu-presets.gif" width="480">
-  <p><sub>PyUI's main menu in thirteen built-in presets, with system icons in the <i>SPRUCE Mono</i> style. Every theme was generated on a MagicX Zero 28; the frames are composed from each theme's own output.</sub></p>
+  <img alt="spruceOS main menu in eight built-in presets, list and grid" src=".github/preview-main-menu.gif" width="420">
+  <img alt="spruceOS system menu in eight built-in presets, list and grid" src=".github/preview-systems.gif" width="420">
+  <p><sub>Eight built-in presets on a MagicX Zero 28: the main menu (left) and the system menu (right), each split diagonally with the <b>list</b> layout above and the <b>grid</b> layout below. System icons use the <i>SPRUCE Mono</i> style. These are screenshots of the handheld, not mock-ups.</sub></p>
 </div>
 
 **Devices** (aarch64 spruceOS 4.3.x, 4.4.x and 4.5.x, tracked to 4.5.2 stable / 4.5.3 nightly)
