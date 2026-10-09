@@ -63,8 +63,12 @@ local function loadPresetsList()
 			source = source,
 		})
 	end
+	-- User presets first, newest first; built-ins have no timestamp, so order those by name
 	table.sort(presetDetails, function(a, b)
-		return a.created > b.created
+		if a.created ~= b.created then
+			return a.created > b.created
+		end
+		return tostring(a.displayName):lower() < tostring(b.displayName):lower()
 	end)
 	for _, detail in ipairs(presetDetails) do
 		table.insert(
