@@ -1,6 +1,6 @@
 --- Theme creation (spruceOS / PyUI output)
 ---
---- Output layout (see DEVELOPMENT.md §1 and §5):
+--- Output layout (see docs/DEVELOPMENT.md §1 and §5):
 ---   <Themes>/<Name>/config.json + skin/ + icons/            base set, always 640x480
 ---   <Themes>/<Name>/config_<W>x<H>.json + skin_<W>x<H>/ + icons_<W>x<H>/   per extra resolution
 ---   <Themes>/<Name>/<font>.ttf, preview.png, README.md
