@@ -30,9 +30,9 @@ This fork accepts no donations.
 
 Pick colours, a gradient, a font and a layout on the handheld; the app writes a complete PyUI theme to `Themes/<name>` and activates it.
 
-**Devices** (aarch64 spruceOS 4.3.x and 4.4.x, tracked to 4.4.3)
+**Devices** (aarch64 spruceOS 4.3.x, 4.4.x and 4.5.x, tracked to 4.5.2 stable / 4.5.3 nightly)
 
-- Verified on spruceOS 4.3.6: TrimUI Smart Pro S, TrimUI Brick Pro, Miyoo Flip, Miniloong Pocket 1, Anbernic RG35XX SP, Anbernic RG40XX-class 720x480. On 4.4.0: Miyoo Flip.
+- Verified on spruceOS 4.3.6: TrimUI Smart Pro S, TrimUI Brick Pro, Miyoo Flip, Miniloong Pocket 1, Anbernic RG35XX SP, Anbernic RG40XX-class 720x480. On 4.4.0: Miyoo Flip. On 4.4.3: MagicX Zero 28 and Zero 40. On 4.5.3: MagicX Zero 28 and Zero 40.
 - Expected: TrimUI Brick and Smart Pro, GKD Pixel2, the rest of the Anbernic RG XX family, RGB30, and the MagicX Zero28, Zero 40 and XU20 (these need spruceOS 4.4.2 or a Development build; 4.4.1 has no MagicX support in its menu). On the RGB30 a Full spruce update resets the active theme to SPRUCE (spruce keeps that setting inside `App/PyUI`, which the update replaces); your theme folder is kept, re-select it under ***Settings*** > ***Theme***.
 - Not supported: Miyoo A30 and the Mini family (32-bit, no LÖVE runtime).
 
@@ -76,13 +76,13 @@ AESTHETIC_AUTOBUILD=1 AESTHETIC_PRESET=dmg ./dev_launch.sh 1280 720 && python3 u
   - **Build**: writes a complete PyUI theme to `Themes/<name>` with the device's native resolution set and the 640x480 base set
   - **Activate**: switch to the new theme immediately, or later from Settings, Theme
   - **Auto-restore**: the app reopens with your last settings
-  - **Presets**: nine built in (*Win95*, *Purple Noir*, *Terminal*, *Vaporwave*, *Orange Cream*, *DMG*, *Fami*, *Bumblebee*, *Mint*), plus your own
-- **Compatibility check**: warns once at start if the card runs a spruceOS release the app was not built for (anything other than 4.3.x or 4.4.x) or PyUI's theme loader has changed
+  - **Presets**: 33 built in, plus your own — the originals (*Win95*, *Purple Noir*, *Terminal*, *Vaporwave*, *Orange Cream*, *DMG*, *Fami*, *Bumblebee*, *Mint*), ten RetroArch menu themes (*Dracula*, *Nord*, *Gruvbox Dark*, *Solarized Dark*, *Legacy Red*, *Midnight Blue*, *Volcanic Red*, *Dark Purple*, *Electric Blue*, *Undersea*), twelve classic-system palettes (*SNES*, *Genesis*, *GBC*, *GBA*, *Virtual Boy*, *Neo Geo*, *PC Engine*, *Atari 2600*, *C64*, *ZX Spectrum*, *Vectrex*, *Intellivision*) and *MinUI* in black and white
+- **Compatibility check**: warns once at start if the card runs a spruceOS release the app was not built for (anything other than 4.3.x, 4.4.x or 4.5.x) or PyUI's theme loader has changed
 
 ## 📦 Installation
 
 > [!IMPORTANT]
-> Built for **spruceOS 4.3.x and 4.4.x** on aarch64 devices (see Devices above). The Miyoo A30 and Mini family are not supported.
+> Built for **spruceOS 4.3.x, 4.4.x and 4.5.x** on aarch64 devices (see Devices above). The Miyoo A30 and Mini family are not supported.
 
 1. Get `AestheticSpruce_vX.Y.Z_sd-overlay.zip` from the [Releases](https://github.com/CatalyticArkun/aesthetic-spruce/releases) of this repository (stable releases are pinned from tested nightlies; nightlies are marked pre-release), or build it with `./build.sh`.
 2. Unzip it onto the root of the spruceOS card, so that `App/AestheticSpruce` sits next to your other apps.
@@ -104,7 +104,7 @@ AESTHETIC_AUTOBUILD=1 AESTHETIC_PRESET=dmg ./dev_launch.sh 1280 720 && python3 u
 ### Added by this fork
 
 - Runtime libraries in `lib/fallback/` (OpenAL Soft LGPL-2.0, mpg123 LGPL-2.1, FreeType FTL, libvorbis/libogg/libtheora BSD, libmodplug public domain) taken unmodified from the spruceOS release tree; see [lib/fallback/PROVENANCE.md](lib/fallback/PROVENANCE.md). TÖVE is no longer shipped.
-- Reference dimensions in `src/spruce/skin_spec.lua` are generated from the SPRUCE theme by tenlevels (spruceOS default theme, MIT). The *SPRUCE Art* icon style recolours that theme's system art, read from the card at build time (nothing is bundled); generated themes credit it in their README.
+- Reference dimensions in `src/spruce/skin_spec.lua` are generated from the SPRUCE theme by tenlevels (spruceOS default theme, MIT). The *SPRUCE Art* (two tones) and *SPRUCE Mono* (one colour) icon styles recolour that theme's system art, read from the card at build time (nothing is bundled); generated themes credit it in their README.
 
 ### Original credits (kept intact from the upstream project)
 

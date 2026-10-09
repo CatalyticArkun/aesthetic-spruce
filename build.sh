@@ -61,8 +61,11 @@ cp LICENSE "$SRC/LICENSE"
 cp README.md "$SRC/README.md"
 
 echo "== archives =="
+# Homebrew's sevenzip ships 7zz, p7zip ships 7za: take whichever 7-Zip is installed
+SEVENZIP="$(command -v 7z || command -v 7zz || command -v 7za || true)"
+[ -n "$SEVENZIP" ] || { echo "no 7-Zip found: install sevenzip (7zz) or p7zip (7za)" >&2; exit 1; }
 # -mf=off: no ARM64/BCJ executable filters; spruce's on-device p7zip 7zr cannot extract them
-( cd "$OVERLAY" && rm -f "../AestheticSpruce_${VERSION}.7z" && 7z a -t7z -bd -bso0 -m0=lzma2 -mx=5 -mf=off "../AestheticSpruce_${VERSION}.7z" App >/dev/null )
+( cd "$OVERLAY" && rm -f "../AestheticSpruce_${VERSION}.7z" && "$SEVENZIP" a -t7z -bd -bso0 -m0=lzma2 -mx=5 -mf=off "../AestheticSpruce_${VERSION}.7z" App >/dev/null )
 ( cd "$OVERLAY" && rm -f "../AestheticSpruce_${VERSION}_sd-overlay.zip" && zip -9 -q -r "../AestheticSpruce_${VERSION}_sd-overlay.zip" App )
 {
   echo "Aesthetic Spruce ${VERSION} - SD card overlay"
@@ -70,7 +73,7 @@ echo "== archives =="
   echo "Copy the App folder onto the root of your spruceOS SD card (so that App/AestheticSpruce exists"
   echo "next to your other apps), then launch 'Aesthetic Spruce' from the Apps list."
   echo
-  echo "Works on aarch64 spruceOS 4.3.x and 4.4.x devices (TrimUI Smart Pro/Brick family, Miyoo Flip,"
+  echo "Works on aarch64 spruceOS 4.3.x, 4.4.x and 4.5.x devices (TrimUI Smart Pro/Brick family, Miyoo Flip,"
   echo "Miniloong, Anbernic RG XX family, GKD Pixel2, RGB30, MagicX on 4.4.2+). Not for the Miyoo A30 or Mini."
   echo
   echo "Unofficial fork of Aesthetic by Jonathan Avila. Support the original author: https://ko-fi.com/F1F51COHHT"

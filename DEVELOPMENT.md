@@ -1,9 +1,10 @@
 # Developing Aesthetic Spruce
 
 Everything a contributor needs to build, run, change and test the app. Facts here were measured on
-spruceOS 4.3.6 (Development nightly of 2026-09-04) and 4.4.0 and the devices listed at the end, and
-checked against the 4.4.1 source (PyUI's theme loader reads the same layout from 4.3.0 to 4.4.1);
-where something is an assumption it says so.
+spruceOS 4.3.6 (Development nightly of 2026-09-04), 4.4.0 and 4.4.3 on the devices listed at the
+end, and checked against the 4.5 source: base version 4.5.2 stable / 4.5.3 nightly, whose theme
+loaders are byte-identical (PyUI reads the same layout from 4.3.0 to 4.5.3); where something is an
+assumption it says so.
 
 ## 1. What the app is
 
@@ -39,7 +40,7 @@ where something is an assumption it says so.
 | `src/utils/{settings,presets,theme_file}.lua` | auto-restore and presets, one serializer |
 | `src/gamepad_layout.lua`, `src/input.lua`, `src/ui/controllers/input_manager.lua` | input; see §6 |
 | `src/autobuild.lua`, `src/tour.lua` | headless build and screen tour used for device tests |
-| `src/presets/*.lua` | the nine built-in presets (theme-file format, §4) |
+| `src/presets/*.lua` | the built-in presets (theme-file format, §4) |
 | `spruce/` | `launch.sh`, `config.json` (PyUI app manifest), `icon.png` |
 | `assets/` | fonts (TTF + licences), Lucide/Kenney/Material SVGs; `assets/icons/png/` is generated and ignored |
 | `utils/` | host tools: `generate_ui_icon_pngs.py`, `generate_skin_spec.py`, `check_lua_syntax.py`, `validate_theme.py` |
@@ -118,7 +119,8 @@ To add an option:
 Skin: `pyui_assets.lua` lists the ~47 assets PyUI actually reads (grep of every `"<name>.qoi|png"`
 literal in `App/PyUI/main-ui`) with a `kind` (background, bar, plate, frame, panel, pictogram,
 tile, empty) and options; `skin_spec.lua` gives each asset's size per resolution (regenerate it when spruce changes SPRUCE:
-the 4.4.3 tree added the Zero 40's 480x800 set and `ic-cheevos-mark`), generated from
+the 4.4.3 tree added the Zero 40's 480x800 set and `ic-cheevos-mark`, and 4.5.3 added art for
+fbneo, fake08, vic20, coco, j2me and pc98 and resized the saturn, atomiswave and naomi tiles), generated from
 spruce's SPRUCE theme by `utils/generate_skin_spec.py` (regenerate when spruce changes SPRUCE).
 Exceptions: `background` is always the full screen (PyUI's patcher rule; SPRUCE's own 1280x720 file
 is 960x720), `icon-A-54`/`icon-B-54` are compact buttons (SPRUCE ships transparent 640x54 strips).
@@ -128,8 +130,9 @@ with one glyph each, `overrides` for engines and ports, `apps` for app icons, `n
 Letter style. `@handheld`, `@console` and `@tv` are drawn procedurally in `icon_renderer.lua`; every
 other name is a PNG under `assets/icons/png/lucide/{glyph,ui}/`. Unknown ids get the controller.
 The system tiles rendered are SPRUCE's icon list (`skin_spec.lua`) plus
-`icon_renderer.EXTRA_SYSTEM_ICONS`, systems SPRUCE ships no art for (COCO, J2ME, PC-98), at the
-common tile size; `EXTRA_APP_ICONS` does the same for apps (ours, Songo#5). Ids are the basename of
+`icon_renderer.EXTRA_SYSTEM_ICONS`, systems SPRUCE ships no art for (empty since 4.5, which added
+art for COCO, J2ME and PC-98), at the common tile size; `EXTRA_APP_ICONS` does the same for apps
+(ours, Songo#5, Cheevos). Ids are the basename of
 the `icon` field in `Emu/<SYS>/config.json` or `App/<name>/config.json`.
 
 The *SPRUCE Art* style (`systemIconStyle = "SPRUCE Art"`) takes each system's art from spruce's own
@@ -137,7 +140,11 @@ SPRUCE theme on the card (`paths.SPRUCE_REFERENCE_THEME`, `icons_<W>x<H>/` for t
 `icons/`; override with `SPRUCE_REFERENCE_THEME=<dir>` on a workstation) and redraws it as a two-tone
 gradient map: luminance, stretched per icon, runs from the background colour (held back by
 `ART_BG_HOLD` so silhouettes never vanish) to the foreground, flipped on light themes so light parts
-stay light. Unselected tiles use SPRUCE's grey art at `ART_DIM` contrast, selected tiles its colour
+stay light. *SPRUCE Mono* (`systemIconStyle = "SPRUCE Mono"`) reads the same art and shares that
+normalisation, but writes the foreground colour on every pixel and puts the ramp in the alpha
+channel instead, so the tile is one colour over whatever PyUI draws behind it (and transparent
+pixels carry the foreground too, or scaling would fringe them).
+Unselected tiles use SPRUCE's grey art at `ART_DIM` contrast, selected tiles its colour
 art at full contrast. Systems without SPRUCE art (COCO, J2ME, PC-98) fall back to glyph tiles.
 
 Composition rules learned from PyUI (`views/grid_view.py`, photos on device):
@@ -246,7 +253,13 @@ version check and with `AESTHETIC_COMPAT_WARN=1`, then build + apply against the
 `flip-system.json` (only the theme line changed). On spruceOS 4.4.3 (2026-09-27): MagicX Zero 28
 (640x480; the panel is rotated in the kernel now, so `DISPLAY_ROTATION` is 0 and the app renders
 upright without rotating anything itself) and MagicX Zero 40 (480x800 portrait, which builds its
-own `skin_480x800` set), both tour + build + apply against the real system json. Expected: Brick,
+own `skin_480x800` set), both tour + build + apply against the real system json. On spruceOS 4.5.3
+nightly (2026-10-09, base version 4.5.2 stable / 4.5.3 nightly): MagicX Zero 28 (`192.168.68.85`)
+and Zero 40 (`192.168.68.83`), installed from the 7z with the card's own `7zr`, tour OK on both with
+no compatibility warning, then a headless build from a new preset each - RetroArch Dracula on the
+Zero 28 (87 system tiles, the three bluetooth icons, screensaver widgets) and MinUI on the Zero 40
+(base plus its native `skin_480x800`, no `icons/` because the preset turns system icons off).
+Expected: Brick,
 Smart Pro, Pixel2, other Anbernic RG XX, RGB30 and the MagicX XU20. On the
 RGB30 spruce keeps the system json at `App/PyUI/config/rgb30-system.json`, which a Full spruce
 update deletes, so the active theme falls back to SPRUCE (the theme folder is kept). Not supported:
@@ -267,7 +280,7 @@ theoradec, mpg123, modplug; all taken from the spruce release tree, see `lib/fal
 Fleet glibc floor for spruce's own binaries is 2.29; measured devices run 2.33 (TrimUI) and 2.38
 (Flip, Miniloong).
 
-`src/spruce/compat.lua`: `SUPPORTED_FAMILIES` (4.3, 4.4) and `TESTED_VERSIONS`; it also probes
+`src/spruce/compat.lua`: `SUPPORTED_FAMILIES` (4.3, 4.4, 4.5) and `TESTED_VERSIONS`; it also probes
 `App/PyUI/main-ui/themes/theme.py` for the asset and layout names the generator depends on. Add a
 family only after `git diff --ignore-cr-at-eol <last supported tag> <new tag> --
 App/PyUI/main-ui/themes/theme.py App/PyUI/main-ui/themes/theme_patcher.py` shows no layout change
