@@ -31,9 +31,19 @@ This fork accepts no donations.
 Pick colours, a gradient, a font and a layout on the handheld; the app writes a complete PyUI theme to `Themes/<name>` and activates it.
 
 <div align="center">
-  <img alt="spruceOS main menu in eight built-in presets, list and grid" src=".github/preview-main-menu.gif" width="420">
-  <img alt="spruceOS system menu in eight built-in presets, list and grid" src=".github/preview-systems.gif" width="420">
-  <p><sub>Eight built-in presets on a MagicX Zero 28: the main menu (left) and the system menu (right), each split diagonally with the <b>list</b> layout above and the <b>grid</b> layout below. System icons use the <i>SPRUCE Mono</i> style. These are screenshots of the handheld, not mock-ups.</sub></p>
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <img alt="spruceOS main menu in eight built-in presets, list and grid" src=".github/preview-main-menu.gif" width="100%"><br>
+        <sub><b>Main menu</b></sub>
+      </td>
+      <td align="center" width="50%">
+        <img alt="spruceOS system menu in eight built-in presets, list and grid" src=".github/preview-systems.gif" width="100%"><br>
+        <sub><b>System menu</b></sub>
+      </td>
+    </tr>
+  </table>
+  <p><sub>Eight built-in presets on a MagicX Zero 28, each split diagonally: the <b>list</b> layout above the line, the <b>grid</b> layout below. System icons use the <i>SPRUCE Mono</i> style. These are screenshots of the handheld, not mock-ups.</sub></p>
 </div>
 
 **Devices** (aarch64 spruceOS 4.3.x, 4.4.x and 4.5.x, tracked to 4.5.2 stable / 4.5.3 nightly)
