@@ -33,13 +33,23 @@ function splash.load()
 	splash.font = fonts.loaded.monoTitle
 
 	-- Dimensions for positioning
-	splash.textWidth = splash.font:getWidth(splash.title)
 	splash.cursorWidth = splash.font:getWidth(splash.cursorChar)
 	splash.textHeight = splash.font:getHeight()
 
-	-- Calculate the fixed center position (ensure pixel-perfect alignment)
-	splash.centerX = math.floor(state.screenWidth / 2 - splash.textWidth / 2)
-	splash.centerY = math.floor(state.screenHeight / 2 - splash.textHeight / 2)
+	-- Wrap on whole words once, up front: a narrow portrait panel (the Zero 40 is 480 wide) cannot
+	-- fit the title on one line, and wrapping per frame would reflow it as it types. The limit
+	-- leaves room for the cursor so it never wraps as text.
+	local pad = math.max(8, math.floor(state.screenWidth * 0.04))
+	local limit = state.screenWidth - pad * 2 - splash.cursorWidth
+	local _, lines = splash.font:getWrap(splash.title, limit)
+	splash.lines = (lines and #lines > 0) and lines or { splash.title }
+	splash.lineX = {}
+	splash.totalChars = 0
+	for i, line in ipairs(splash.lines) do
+		splash.lineX[i] = math.floor(state.screenWidth / 2 - splash.font:getWidth(line) / 2)
+		splash.totalChars = splash.totalChars + #line
+	end
+	splash.startY = math.floor(state.screenHeight / 2 - (#splash.lines * splash.textHeight) / 2)
 
 	-- State machine: controls the animation phase (waiting, typing, holding, fading, done)
 	splash.state = "waiting"
@@ -62,6 +72,19 @@ function splash.onEnter()
 	splash.state = "waiting"
 end
 
+-- The line currently being typed and how many of its characters are revealed
+function splash.typedPosition()
+	local remaining = splash.currentIndex
+	for i, line in ipairs(splash.lines) do
+		if remaining <= #line then
+			return i, remaining
+		end
+		remaining = remaining - #line
+	end
+	local last = math.max(1, #splash.lines)
+	return last, #(splash.lines[last] or "")
+end
+
 function splash.draw()
 	local ok, err = pcall(function()
 		love.graphics.clear(splash.background.color)
@@ -73,20 +96,21 @@ function splash.draw()
 
 		love.graphics.setColor(colors.ui.foreground[1], colors.ui.foreground[2], colors.ui.foreground[3], splash.alpha)
 
-		-- Get visible text and draw it
-		if splash.currentIndex > 0 then
-			local text = string.sub(splash.title, 1, splash.currentIndex)
-			love.graphics.print(text, splash.centerX, splash.centerY)
+		-- Draw every finished line, then the part of the line being typed
+		local activeLine, activeShown = splash.typedPosition()
+		for i = 1, activeLine do
+			local shown = (i == activeLine) and activeShown or #splash.lines[i]
+			if shown > 0 then
+				local text = string.sub(splash.lines[i], 1, shown)
+				love.graphics.print(text, splash.lineX[i], splash.startY + (i - 1) * splash.textHeight)
+			end
 		end
 
-		-- Draw cursor at current position if it should be visible
+		-- Draw cursor after the last revealed character if it should be visible
 		if (splash.state == "typing" or splash.state == "holding") and splash.showCursor then
-			local cursorX = splash.centerX
-			if splash.currentIndex > 0 then
-				cursorX = cursorX + splash.font:getWidth(string.sub(splash.title, 1, splash.currentIndex))
-			end
-			cursorX = math.floor(cursorX)
-			love.graphics.print(splash.cursorChar, cursorX, splash.centerY)
+			local typed = string.sub(splash.lines[activeLine], 1, activeShown)
+			local cursorX = math.floor(splash.lineX[activeLine] + splash.font:getWidth(typed))
+			love.graphics.print(splash.cursorChar, cursorX, splash.startY + (activeLine - 1) * splash.textHeight)
 		end
 		love.graphics.pop()
 	end)
@@ -123,7 +147,7 @@ function splash.update(dt)
 		if splash.letterTimer >= splash.typingDelay then
 			splash.letterTimer = 0
 			splash.currentIndex = splash.currentIndex + 1
-			if splash.currentIndex >= string.len(splash.title) then
+			if splash.currentIndex >= splash.totalChars then
 				splash.state = "holding"
 				splash.holdTimer = splash.holdDuration
 			end
