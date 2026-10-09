@@ -8,12 +8,14 @@
 local compat = {}
 
 -- Base versions this build was verified on (hardware runs, theme loaded by PyUI)
-compat.TESTED_VERSIONS = { "4.3.6", "4.4.0", "4.4.3" }
+compat.TESTED_VERSIONS = { "4.3.6", "4.4.0", "4.4.3", "4.5.3" }
 -- Release families (major.minor) whose PyUI theme format this build targets. PyUI's
--- themes/theme.py and theme_patcher.py read the same layout from 4.3.0 to 4.4.3; 4.3.3 added the
--- optional screensaver.lowPowerWhileIdle, 4.4.0 the optional screensaver.dimBacklight and 4.4.3
--- the optional ic-cheevos-mark (PyUI falls back to the stock theme's copy when a theme lacks it).
-compat.SUPPORTED_FAMILIES = { "4.3", "4.4" }
+-- themes/theme.py and theme_patcher.py read the same layout from 4.3.0 to 4.5.3, and 4.5.2 stable
+-- carries a theme loader byte-identical to the 4.5.3 nightly; 4.3.3 added the
+-- optional screensaver.lowPowerWhileIdle, 4.4.0 the optional screensaver.dimBacklight and
+-- screensaver.widgets, 4.4.3 the optional ic-cheevos-mark and 4.5 the three bluetooth status icons
+-- (all fall back to a PyUI or stock-theme default when a theme omits them).
+compat.SUPPORTED_FAMILIES = { "4.3", "4.4", "4.5" }
 
 local PYUI_THEME_LOADER = "/mnt/SDCARD/App/PyUI/main-ui/themes/theme.py"
 -- Strings the loader must still contain for the generated layout to be understood
@@ -45,7 +47,10 @@ function compat.supportedFamiliesText()
 	for i, family in ipairs(compat.SUPPORTED_FAMILIES) do
 		parts[i] = family .. ".x"
 	end
-	return table.concat(parts, " or ")
+	if #parts < 3 then
+		return table.concat(parts, " or ")
+	end
+	return table.concat(parts, ", ", 1, #parts - 1) .. " or " .. parts[#parts]
 end
 
 local function readFile(path)

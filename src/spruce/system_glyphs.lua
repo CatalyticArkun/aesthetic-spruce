@@ -27,20 +27,20 @@ glyphs.families = {
 		"pce", "sgfx", "neogeo", "vdp", "ps", "saturn", "dc", "segacd", "neocd", "pcecd",
 		"atari", "5200", "7800", "jaguar", "col", "itv", "ody", "fairchild", "vectrex",
 	},
-	arcade = { "arcade", "mame", "cps1", "cps2", "cps3", "naomi", "atomiswave" },
-	computer = { "amiga", "c64", "cpc", "msx", "x68000", "zxs", "atarist", "atari800", "dos", "coco", "pc98" },
+	arcade = { "arcade", "mame", "fbneo", "cps1", "cps2", "cps3", "naomi", "atomiswave" },
+	computer = { "amiga", "c64", "vic20", "cpc", "msx", "x68000", "zxs", "atarist", "atari800", "dos", "coco", "pc98" },
 }
 
 -- engines, ports and oddballs that are not a device
 glyphs.overrides = {
 	ports = "package", doom = "crosshair", quake = "crosshair", wolf = "crosshair", openbor = "flame",
 	scummvm = "book-open", easyrpg = "book-text", ffplay = "clapperboard", pico = "sparkles",
-	tic = "sparkles", chai = "coffee", arduboy = "circuit-board", gametank = "cpu", ["mkxp-z"] = "shapes",
-	dos = "terminal",
+	tic = "sparkles", fake08 = "sparkles", chai = "coffee", arduboy = "circuit-board", gametank = "cpu",
+	["mkxp-z"] = "shapes", dos = "terminal",
 }
 
 glyphs.apps = {
-	backup = "archive", bootlogo = "image", emufresh = "refresh-ccw", ereader = "book-open",
+	backup = "archive", bootlogo = "image", cheevos = "trophy", emufresh = "refresh-ccw", ereader = "book-open",
 	expertappswitch = "sliders-horizontal", file = "folder", firmwareupdate = "hard-drive-upload",
 	fnkey = "keyboard", gallery = "images", gamelist = "list-ordered", iconfresh = "sparkles",
 	led = "lightbulb", menuswitch = "layout-grid", moonlight = "monitor-smartphone", pico8 = "sparkles",
@@ -57,7 +57,8 @@ glyphs.names = {
 	arduboy = "Arduboy", atari800 = "Atari 800", atari = "Atari 2600", atarist = "Atari ST",
 	atomiswave = "Atomiswave", c64 = "Commodore 64", chai = "ChaiLove", coco = "CoCo", col = "ColecoVision",
 	cpc = "Amstrad CPC", cps1 = "CPS-1", cps2 = "CPS-2", cps3 = "CPS-3", dc = "Dreamcast", doom = "Doom",
-	dos = "DOS", dsi = "DSi", easyrpg = "EasyRPG", fairchild = "Channel F", fc = "NES", fds = "Famicom Disk System",
+	dos = "DOS", dsi = "DSi", easyrpg = "EasyRPG", fairchild = "Channel F", fake08 = "FAKE-08", fbneo = "FBNEO",
+	fc = "NES", fds = "Famicom Disk System",
 	ffplay = "Video", gametank = "Game Tank", gba = "Game Boy Advance", gbc = "Game Boy Color", gb = "Game Boy",
 	gg = "Game Gear", gw = "Game & Watch", itv = "Intellivision", j2me = "J2ME", jaguar = "Jaguar", lynx = "Lynx",
 	mame = "MAME", md = "Genesis", megaduck = "Mega Duck", ["mkxp-z"] = "MKXP-Z", ms = "Master System",
@@ -68,7 +69,8 @@ glyphs.names = {
 	satella = "Satellaview", saturn = "Saturn", scummvm = "ScummVM", segacd = "Sega CD", segasgone = "SG-1000",
 	sfc = "Super Nintendo", sgb = "Super Game Boy", sgfx = "SuperGrafx", sufami = "Sufami Turbo",
 	supervision = "Supervision", tic = "TIC-80", vb = "Virtual Boy", vdp = "VDP", vectrex = "Vectrex",
-	wolf = "Wolfenstein 3D", wsc = "WonderSwan Color", ws = "WonderSwan", x68000 = "X68000", zxs = "ZX Spectrum",
+	vic20 = "VIC-20", wolf = "Wolfenstein 3D", wsc = "WonderSwan Color", ws = "WonderSwan", x68000 = "X68000",
+	zxs = "ZX Spectrum",
 }
 
 local familyOf = {}

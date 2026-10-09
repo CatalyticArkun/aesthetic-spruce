@@ -61,6 +61,11 @@ return {
 	["icon-wifi-signal-04"] = { kind = "pictogram", icon = "lucide/glyph/wifi" },
 	["icon-wifi-locked"] = { kind = "pictogram", icon = "lucide/glyph/lock" },
 
+	-- PyUI 4.5 picks one of these by connected-device kind (theme.py get_bluetooth_icon)
+	["icon-bluetooth-default"] = { kind = "pictogram", icon = "lucide/glyph/bluetooth" },
+	["icon-bluetooth-gamepad"] = { kind = "pictogram", icon = "lucide/glyph/gamepad-2" },
+	["icon-bluetooth-headphone"] = { kind = "pictogram", icon = "lucide/glyph/headphones" },
+
 	["ic-power-charge-0%"] = { kind = "pictogram", icon = "lucide/glyph/battery-charging", color = "batteryActive" },
 	["ic-power-charge-25%"] = { kind = "pictogram", icon = "lucide/glyph/battery-charging", color = "batteryActive" },
 	["ic-power-charge-50%"] = { kind = "pictogram", icon = "lucide/glyph/battery-charging", color = "batteryActive" },

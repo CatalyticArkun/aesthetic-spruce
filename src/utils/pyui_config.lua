@@ -65,6 +65,7 @@ function pyuiConfig.build(width, height)
 	local fm = pyuiConfig.fontSizeMultiplier()
 	local fg = state.getColorValue("foreground")
 	local bg = state.getColorValue("background")
+	local batteryActive = state.getColorValue("batteryActive")
 	local grid = state.homeScreenLayout == "Grid"
 
 	local cfg = {
@@ -96,6 +97,14 @@ function pyuiConfig.build(width, height)
 			bgColor = bg,
 			overlayColor = bg,
 			overlayOpacity = 0.3,
+			-- PyUI's fallback widgets are hardcoded white/grey/green, so emit our own in the
+			-- theme's colours. Sizes stay 640x480-base and unscaled: PyUI's own screensaver
+			-- renderer re-applies scaleFor's factor to fontSize, so pre-scaling would double it.
+			widgets = {
+				{ type = "clock", x = 0.5, y = 0.37, fontSize = px(64, 1), color = fg, enabled = true, font = fontFile },
+				{ type = "date", x = 0.5, y = 0.55, fontSize = px(22, 1), color = fg, enabled = true, font = fontFile },
+				{ type = "battery", x = 0.5, y = 0.70, fontSize = px(18, 1), color = batteryActive, enabled = true, font = fontFile },
+			},
 		},
 
 		showTopBarText = state.showTopBarText and true or false,
