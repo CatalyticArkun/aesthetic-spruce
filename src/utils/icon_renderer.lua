@@ -16,9 +16,10 @@ local logger = require("utils.logger")
 local iconRenderer = {}
 
 -- App icons not in the SPRUCE reference set but worth theming (keyed by the app's config.json icon name)
-iconRenderer.EXTRA_APP_ICONS = { "aestheticspruce", "songo" }
--- Systems SPRUCE ships no icon for (keyed by the Emu config.json icon name); sized like the others
-iconRenderer.EXTRA_SYSTEM_ICONS = { "coco", "j2me", "pc98" }
+iconRenderer.EXTRA_APP_ICONS = { "aestheticspruce", "songo", "cheevos" }
+-- Systems SPRUCE ships no icon for (keyed by the Emu config.json icon name); sized like the others.
+-- Empty since SPRUCE 4.5 (coco, j2me, pc98 gained art); kept for the next system that ships without any.
+iconRenderer.EXTRA_SYSTEM_ICONS = {}
 
 -- Glyphs come from the Lucide glyph set; a few names only exist in the smaller UI set
 local function glyphPath(name)
@@ -209,7 +210,10 @@ end
 -- background and foreground. The art's light parts take the lighter of the two colours, so a drawing
 -- reads the same way on dark and light themes. Unselected tiles use SPRUCE's grey art dimmed toward
 -- the background; selected tiles use its colour art at full contrast, as SPRUCE does.
+-- "SPRUCE Mono" is the same art in one colour: the ramp drives alpha instead of mixing toward the
+-- background, so the tile keeps its shading and sits on whatever PyUI draws behind it.
 local ART_STYLE = "SPRUCE Art"
+local MONO_STYLE = "SPRUCE Mono"
 local ART_BG_HOLD = 0.1 -- the ramp stops short of the background colour, so no silhouette vanishes
 local ART_DIM = 0.6 -- contrast of unselected tiles
 
@@ -246,7 +250,8 @@ local function spruceArtPath(id, resolution, selectedVariant)
 	return nil
 end
 
-local function duotone(imageData, bg, fg, contrast)
+-- Luminance range of the art's visible pixels, so every icon's ramp uses its own contrast
+local function artRange(imageData)
 	local lo, hi = 1, 0
 	imageData:mapPixel(function(_, _, r, g, b, a)
 		if a > 0.125 then
@@ -263,6 +268,11 @@ local function duotone(imageData, bg, fg, contrast)
 	if hi <= lo then
 		lo, hi = 0, 1
 	end
+	return lo, hi
+end
+
+local function duotone(imageData, bg, fg, contrast)
+	local lo, hi = artRange(imageData)
 	local span = hi - lo
 	local lightBackground = luminance(bg[1], bg[2], bg[3]) > luminance(fg[1], fg[2], fg[3])
 	imageData:mapPixel(function(_, _, r, g, b, a)
@@ -275,9 +285,24 @@ local function duotone(imageData, bg, fg, contrast)
 	end)
 end
 
--- Write one SPRUCE Art tile. Returns true, false when the card has no art for this system, or
--- nil and an error.
-local function renderArtTileFile(path, id, resolution, selectedVariant, dims)
+local function monotone(imageData, bg, fg, contrast)
+	local lo, hi = artRange(imageData)
+	local span = hi - lo
+	local lightBackground = luminance(bg[1], bg[2], bg[3]) > luminance(fg[1], fg[2], fg[3])
+	imageData:mapPixel(function(_, _, r, g, b, a)
+		local t = math.min(1, math.max(0, (luminance(r, g, b) - lo) / span))
+		if lightBackground then
+			t = 1 - t
+		end
+		-- the foreground goes on every pixel, transparent ones included: PyUI scales these tiles,
+		-- and bilinear sampling would otherwise pull a dark fringe out of (0,0,0,0)
+		return fg[1], fg[2], fg[3], a * (ART_BG_HOLD + (1 - ART_BG_HOLD) * t) * contrast
+	end)
+end
+
+-- Write one SPRUCE Art or SPRUCE Mono tile. Returns true, false when the card has no art for this
+-- system, or nil and an error.
+local function renderArtTileFile(path, id, resolution, selectedVariant, dims, mono)
 	local source = spruceArtPath(id, resolution, selectedVariant)
 	local imageData = source and loadImageData(source)
 	if not imageData then
@@ -285,7 +310,8 @@ local function renderArtTileFile(path, id, resolution, selectedVariant, dims)
 	end
 	local fg = colorUtils.hexToLove(state.getColorValue("foreground"))
 	local bg = colorUtils.hexToLove(state.getColorValue("background"))
-	duotone(imageData, bg, fg, selectedVariant and 1 or ART_DIM)
+	local convert = mono and monotone or duotone
+	convert(imageData, bg, fg, selectedVariant and 1 or ART_DIM)
 	local pngData
 	if imageData:getWidth() == dims[1] and imageData:getHeight() == dims[2] then
 		pngData = imageData:encode("png")
@@ -332,7 +358,8 @@ function iconRenderer.renderIcons(width, height, outDir, progress)
 	local scale = math.min(width / 640, height / 480)
 	local _, ttfPath = pyuiConfig.fontFile()
 	local letters = state.systemIconStyle == "Letter"
-	local art = state.systemIconStyle == ART_STYLE
+	local mono = state.systemIconStyle == MONO_STYLE
+	local art = state.systemIconStyle == ART_STYLE or mono
 	local withoutArt = {}
 
 	local systemIds = sortedKeys(systems)
@@ -351,9 +378,9 @@ function iconRenderer.renderIcons(width, height, outDir, progress)
 		local selDims = selected[id] or dims
 		local done = false
 		if art then
-			local ok, err = renderArtTileFile(outDir .. "/" .. id .. ".png", id, resolution, false, dims)
+			local ok, err = renderArtTileFile(outDir .. "/" .. id .. ".png", id, resolution, false, dims, mono)
 			if ok then
-				ok, err = renderArtTileFile(outDir .. "/sel/" .. id .. ".png", id, resolution, true, selDims)
+				ok, err = renderArtTileFile(outDir .. "/sel/" .. id .. ".png", id, resolution, true, selDims, mono)
 			end
 			if ok == nil then
 				return fail(err)
@@ -381,7 +408,14 @@ function iconRenderer.renderIcons(width, height, outDir, progress)
 		end
 	end
 	if #withoutArt > 0 then
-		logger.info(string.format("SPRUCE Art %s: no SPRUCE art for %s, glyph tiles used", resolution, table.concat(withoutArt, ", ")))
+		logger.info(
+			string.format(
+				"%s %s: no SPRUCE art for %s, glyph tiles used",
+				state.systemIconStyle,
+				resolution,
+				table.concat(withoutArt, ", ")
+			)
+		)
 	end
 
 	local appNames = sortedKeys(apps)

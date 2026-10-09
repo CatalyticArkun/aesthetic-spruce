@@ -26,7 +26,7 @@ local function fitList(list)
 	return list
 end
 
-local ICON_STYLES = { "Glyph", "Letter", "SPRUCE Art" }
+local ICON_STYLES = { "Glyph", "Letter", "SPRUCE Art", "SPRUCE Mono" }
 
 local function iconStyleIndex()
 	for i, style in ipairs(ICON_STYLES) do
