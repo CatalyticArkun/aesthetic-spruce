@@ -17,7 +17,10 @@ local pyuiConfig = {}
 -- Editor labels -> PyUI ViewType names (views/view_type.py); unknown names fall back to PyUI defaults
 local VIEW = {
 	games = { ["Text"] = "TEXT_ONLY", ["Text + Box Art"] = "TEXT_AND_IMAGE", ["Full Screen Grid"] = "FULLSCREEN_GRID", ["Carousel"] = "CAROUSEL" },
-	systems = { ["Grid"] = "GRID", ["Text"] = "TEXT_ONLY", ["Carousel"] = "CAROUSEL" },
+	-- the systems list is ICON_AND_DESC, not TEXT_ONLY: its entries carry an icon, and TEXT_ONLY
+	-- draws none, so the tiles we generate never showed. systemIcons = false already forces
+	-- TEXT_ONLY below, so this branch only runs with icons switched on.
+	systems = { ["Grid"] = "GRID", ["Text"] = "ICON_AND_DESC", ["Carousel"] = "CAROUSEL" },
 	apps = { ["Icons + Details"] = "ICON_AND_DESC", ["Text"] = "TEXT_ONLY" },
 }
 pyuiConfig.VIEW = VIEW
@@ -83,6 +86,8 @@ function pyuiConfig.build(width, height)
 		batteryPercentage = { font = fontFile, size = px(18, s), color = fg },
 		listFontSize = px(24 * fm, s),
 
+		-- the main menu stays TEXT_ONLY in list mode: PyUI builds its entries with icon = nil and
+		-- does not pass icon_and_desc_use_image_in_place_of_icon, so a list there cannot show icons
 		mainMenuViewType = grid and "GRID" or "TEXT_ONLY",
 		systemSelectViewType = state.systemIcons and (VIEW.systems[state.systemsView] or "GRID") or "TEXT_ONLY",
 		gameSelectionViewType = VIEW.games[state.gameListView] or "TEXT_AND_IMAGE",
