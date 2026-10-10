@@ -69,7 +69,7 @@ Pick colours, a gradient, a font and a layout on the handheld; the app writes a 
 - **Layout** — grid of tiles or a text list; box art width; title, clock, battery and button hints each shown or hidden.
 - **System icons** — off, a glyph per family, the system's first letter, or SPRUCE's own art redrawn in the theme's colours (*SPRUCE Art*, two tones) or in one (*SPRUCE Mono*).
 - **spruceOS options** — view type for the game list, systems and apps; Recents, Collections and Favorites tiles; index counter; screensaver timeout.
-- **33 presets** — nine originals, ten RetroArch menu themes, twelve classic-system palettes and *MinUI* in black and white. Save your own alongside them.
+- **34 presets** — nine originals, ten RetroArch menu themes, eleven classic-system palettes, two colour palettes (*Berry*, *Cobalt*) and *MinUI* in black and white. Save your own alongside them.
 
 Themes are written with your device's native resolution set plus the 640x480 base set, so they also work if you move the card to another handheld.
 
