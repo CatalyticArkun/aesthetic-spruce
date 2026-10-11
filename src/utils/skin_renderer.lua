@@ -138,11 +138,11 @@ end
 
 -- Encode the current canvas to a PNG file (straight alpha; see imageGenerator.unpremultiply)
 local function saveCanvas(canvas, path, opaque, bleed)
-	local pngData = imageGenerator.encodeCanvas(canvas, opaque, bleed)
-	if not pngData then
+	local png = imageGenerator.encodeCanvas(canvas, opaque, bleed)
+	if not png then
 		return fail("Failed to encode PNG for " .. path)
 	end
-	return system.writeFile(path, pngData:getString())
+	return system.writeFile(path, png)
 end
 
 -- Render one named asset to outDir/<name>.png at the size the reference theme uses

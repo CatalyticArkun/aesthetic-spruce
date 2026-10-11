@@ -192,7 +192,7 @@ local function renderTileFile(path, opts)
 	if not pngData then
 		return fail("Failed to encode icon " .. path)
 	end
-	return system.writeFile(path, pngData:getString())
+	return system.writeFile(path, pngData)
 end
 
 local function sortedKeys(t)
@@ -314,7 +314,7 @@ local function renderArtTileFile(path, id, resolution, selectedVariant, dims, mo
 	convert(imageData, bg, fg, selectedVariant and 1 or ART_DIM)
 	local pngData
 	if imageData:getWidth() == dims[1] and imageData:getHeight() == dims[2] then
-		pngData = imageData:encode("png")
+		pngData = imageGenerator.encodePngRGBA(imageData)
 	else
 		-- the card's SPRUCE differs from skin_spec: fit the art into the tile, top-aligned
 		local image = love.graphics.newImage(imageData)
@@ -336,7 +336,7 @@ local function renderArtTileFile(path, id, resolution, selectedVariant, dims, mo
 	if not pngData then
 		return nil, "Failed to encode icon " .. path
 	end
-	if not system.writeFile(path, pngData:getString()) then
+	if not system.writeFile(path, pngData) then
 		return nil, "Failed to write " .. path
 	end
 	return true
