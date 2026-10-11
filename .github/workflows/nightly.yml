@@ -83,3 +83,12 @@ jobs:
             --notes-file notes.md \
             dist/*.zip dist/*.7z dist/SHA256SUMS.txt
           echo "published $TAG"
+
+          # Only ever one nightly on the releases page: drop the older ones and their tags.
+          # Stable releases are untouched -- they are pinned to their own vX.Y.Z tags.
+          gh release list --limit 100 --json tagName,isPrerelease \
+            --jq '.[] | select(.isPrerelease) | .tagName' \
+          | grep '^nightly-' | grep -v "^$TAG$" | while read -r old_tag; do
+              echo "removing superseded nightly $old_tag"
+              gh release delete "$old_tag" --cleanup-tag --yes || true
+            done
