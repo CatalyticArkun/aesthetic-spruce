@@ -20,8 +20,8 @@ local function withAlpha(c, a)
 	return { c[1], c[2], c[3], a or 1 }
 end
 
--- A ramp built on the CPU, not a vertex-coloured mesh: whether a driver honours vertex colours
--- varies by GPU, and a theme that builds on one handheld must look the same on every other.
+-- A ramp built on the CPU, not a vertex-coloured mesh: the GPU interpolation missed both declared
+-- endpoints (#1B2430 came out 24,34,47 on a Brick Pro), while this hits the chosen hex exactly.
 local function gradientRamp(horizontal, from, to)
 	local steps = 256
 	local data = love.image.newImageData(horizontal and steps or 1, horizontal and 1 or steps)
