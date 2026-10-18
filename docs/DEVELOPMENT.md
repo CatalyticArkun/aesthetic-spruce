@@ -116,6 +116,14 @@ To add an option:
 3. Copy the chosen TTF, render `preview.png` (640x480 with the theme name), write `README.md`.
 4. `mv` the folder into `Themes/<sanitised name>` (next free `(n)` suffix), `sync`.
 
+Every asset is written by `imageGenerator.encodePngRGBA` (8-bit RGBA, filter 0, zlib through
+`love.data.compress`), never `ImageData:encode("png")`. LÖVE hands any image with 256 colours or
+fewer to lodepng's palette path, and a theme built on a handheld hits that constantly: flat plates,
+two-stop gradients, mono icons. Some device image loaders render those indexed files wrong — on a
+Brick Pro a red-to-blue gradient came out red, black, blue, and `bg-title` lost the alpha it keeps
+in a `tRNS` chunk, so the bar drew opaque. Host builds usually exceeded 256 colours and stayed
+truecolour, which is why this only ever showed on device-built themes (fixed in 1.2.0).
+
 Skin: `pyui_assets.lua` lists the ~47 assets PyUI actually reads (grep of every `"<name>.qoi|png"`
 literal in `App/PyUI/main-ui`) with a `kind` (background, bar, plate, frame, panel, pictogram,
 tile, empty) and options; `skin_spec.lua` gives each asset's size per resolution (regenerate it when spruce changes SPRUCE:
@@ -310,4 +318,7 @@ verified nightly is built from. `AESTHETIC_COMPAT_WARN=1` forces the warning mod
 - `App/PyUI/` files in the spruceOS repository are CRLF; do not reformat them when reading.
 - Keep the original author's attribution, credits and Ko-fi intact in the README, the About screen
   and the generated theme README; this fork is not affiliated with either upstream.
+- Never swap an asset writer back to `ImageData:encode("png")`: it silently palettises small-colour
+  images and breaks them on some devices (see §5). Check a built theme with
+  `python3 -c "from PIL import Image; print(Image.open('<asset>.png').mode)"` — it must not be `P`.
 - Open work is tracked in `TODO.md`.
