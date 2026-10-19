@@ -4,9 +4,9 @@
 Every option domain is PARSED from source, never retyped here: if a parse finds nothing the script
 fails rather than silently testing less. Emits one case per file set into <out>/:
 
-    NNN-<name>.lua      a preset to build (absent for built-in preset cases)
-    NNN-<name>.builtin  the name of a built-in preset to build instead
-    NNN-<name>.theme    the theme directory the build will produce
+    NNN-<name>.lua      the preset to build (preset cases are the built-in file with themeName
+                        rewritten to this case's own S2nnn, so no user theme can be touched)
+    NNN-<name>.theme    the theme directory the build will produce, always S2nnn
     NNN-<name>.args     extra arguments for validate_theme.py (may be empty)
 
 Usage: utils/make_stage2_cases.py <out dir>
@@ -133,12 +133,15 @@ def main():
     dom, dflt = parse_domains(), parse_defaults()
     cases, n = [], 0
 
-    def add(name, fields=None, builtin=None, theme=None):
+    def add(name, fields=None, body=None, theme=None):
+        """Every case builds under an S2nnn theme name THIS RUN OWNS. A case must never build over
+        or delete a theme the user has, which is what using a preset's own name would have done."""
         nonlocal n
         n += 1
         stem = os.path.join(out, "%03d-%s" % (n, name))
-        if builtin:
-            open(stem + ".builtin", "w").write(builtin + "\n")
+        assert re.fullmatch(r"S2\d{3}", theme), "theme name must be S2nnn, got %r" % theme
+        if body is not None:
+            open(stem + ".lua", "w").write(body)
             args = []
         else:
             open(stem + ".lua", "w").write(preset(theme, fields))
@@ -187,8 +190,13 @@ def main():
         if not f.endswith(".lua"):
             continue
         name = f[:-4]
-        m = re.search(r'themeName\s*=\s*"([^"]+)"', open(os.path.join(pdir, f)).read())
-        add("preset-%s" % name, builtin=name, theme=need("themeName in " + f, m).group(1))
+        src = open(os.path.join(pdir, f)).read()
+        need("themeName in " + f, re.search(r'themeName\s*=\s*"([^"]+)"', src))
+        theme = "S2%03d" % (n + 1)
+        # The app loads this through the same preset loader; only the theme name is ours, so the
+        # build cannot touch a theme the user already has under the preset's own name.
+        body = re.sub(r'themeName\s*=\s*"[^"]+"', 'themeName = "%s"' % theme, src, count=1)
+        add("preset-%s" % name, body=body, theme=theme)
 
     with open(os.path.join(out, "CASES.txt"), "w") as fh:
         for stem, theme in cases:

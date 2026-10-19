@@ -48,8 +48,20 @@ class Stage2Cases(unittest.TestCase):
             p = os.path.join(self.dir, stem)
             self.assertTrue(os.path.exists(p + ".args"), stem)
             self.assertTrue(os.path.exists(p + ".theme"), stem)
-            self.assertTrue(os.path.exists(p + ".lua") or os.path.exists(p + ".builtin"), stem)
+            self.assertTrue(os.path.exists(p + ".lua"), stem)
             self.assertEqual(open(p + ".theme").read().strip(), theme)
+
+    def test_every_theme_name_is_one_we_own(self):
+        """A case must never build under a preset's own name: it would overwrite a user theme and
+        then the pass path would delete it."""
+        for stem, theme in self.cases:
+            self.assertRegex(theme, r"^S2\d{3}$", f"{stem} would build under {theme!r}")
+        src = open(os.path.join(ROOT, "src", "presets", "win95.lua")).read()
+        self.assertIn("Win95", src, "fixture assumption: the preset names itself Win95")
+        case = next(s for s, _ in self.cases if s.endswith("preset-win95"))
+        body = open(os.path.join(self.dir, case + ".lua")).read()
+        self.assertNotIn('themeName = "Win95"', body, "the preset's own name must be rewritten")
+        self.assertIn('themeName = "S2', body)
 
     def test_theme_names_are_unique(self):
         names = [t for _, t in self.cases]
