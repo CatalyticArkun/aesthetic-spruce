@@ -120,11 +120,17 @@ def background_args(f):
     return ["--gradient", "%s:#1E40AF,#155CFB" % d]
 
 
+# Only "SPRUCE Art" recolours the SPRUCE art in two tones. Glyph and Letter each draw one `ink`
+# colour (icon_renderer.lua drawSymbol/drawHandheldGlyph), and SPRUCE Mono is one colour by name.
+# Asserting "multi" for the Glyph default is what failed all 18 cases on 2026-10-19.
+TWO_TONE_STYLES = {"SPRUCE Art"}
+
+
 def icon_args(f):
     if not f.get("systemIcons", True):
         return []            # no icons directory at all; nothing to assert
     style = f.get("systemIconStyle", "Glyph")
-    return ["--icon-style", "mono" if style == "SPRUCE Mono" else "multi"]
+    return ["--icon-style", "multi" if style in TWO_TONE_STYLES else "mono"]
 
 
 def main():

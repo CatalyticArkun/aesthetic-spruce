@@ -63,6 +63,24 @@ class Stage2Cases(unittest.TestCase):
         self.assertNotIn('themeName = "Win95"', body, "the preset's own name must be rewritten")
         self.assertIn('themeName = "S2', body)
 
+    def test_only_sprite_art_is_asserted_two_tone(self):
+        """Glyph (the default) and Letter draw one ink colour; only SPRUCE Art is two-tone.
+        Asserting otherwise failed every icon-bearing case on the device on 2026-10-19."""
+        seen = {"mono": 0, "multi": 0}
+        for stem, _ in self.cases:
+            args = open(os.path.join(self.dir, stem + ".args")).read()
+            lua = open(os.path.join(self.dir, stem + ".lua")).read()
+            m = re.search(r'systemIconStyle = "([^"]+)"', lua)
+            style = m.group(1) if m else "Glyph"
+            if "--icon-style" not in args:
+                continue
+            want = "multi" if style == "SPRUCE Art" else "mono"
+            got = args.split("--icon-style")[1].split()[0]
+            self.assertEqual(got, want, f"{stem} (style {style}) asserts {got}")
+            seen[got] += 1
+        self.assertGreater(seen["mono"], 0)
+        self.assertGreater(seen["multi"], 0, "no case covers the two-tone style")
+
     def test_theme_names_are_unique(self):
         names = [t for _, t in self.cases]
         self.assertEqual(len(names), len(set(names)), "two cases would write the same theme dir")
