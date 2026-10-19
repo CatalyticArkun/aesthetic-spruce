@@ -85,6 +85,24 @@ class Stage2Cases(unittest.TestCase):
         names = [t for _, t in self.cases]
         self.assertEqual(len(names), len(set(names)), "two cases would write the same theme dir")
 
+    def test_no_case_ships_without_assertions(self):
+        """A review cannot count assertions that are not there: stage 2's first full run passed
+        71/71 while 34 preset cases carried an empty .args and asserted nothing targeted."""
+        for stem, _ in self.cases:
+            args = open(os.path.join(self.dir, stem + ".args")).read().strip()
+            self.assertTrue(args, f"{stem} ships no checker arguments")
+            self.assertIn("--expect", args, f"{stem} asserts no config key")
+            self.assertIn("--gradient", args, f"{stem} asserts nothing about its background")
+
+    def test_preset_cases_assert_their_own_colours(self):
+        """A preset's gradient must be checked against ITS stops, not the option sweep's."""
+        src = open(os.path.join(ROOT, "src", "presets", "retroarch_dracula.lua")).read()
+        m = re.search(r'background\s*=\s*"(#[0-9A-Fa-f]{6})"', src)
+        case = next(s for s, _ in self.cases if s.endswith("preset-retroarch_dracula"))
+        args = open(os.path.join(self.dir, case + ".args")).read()
+        if "--gradient solid" not in args:
+            self.assertIn(m.group(1), args, "the preset's own background colour is not asserted")
+
     def test_only_known_flags_are_emitted(self):
         known = {"--expect", "--gradient", "--icon-style"}
         for stem, _ in self.cases:

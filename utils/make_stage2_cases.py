@@ -13,6 +13,8 @@ Usage: utils/make_stage2_cases.py <out dir>
 """
 import os, re, sys
 
+DEFAULT_COLORS = {}
+
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 
@@ -67,6 +69,36 @@ def parse_defaults():
     return need("defaults", out)
 
 
+def parse_color_defaults():
+    src = read("src", "state.lua")
+    block = need("COLOR_FIELDS", re.search(r'state\.COLOR_FIELDS = \{(.*?)\n\}', src, re.S)).group(1)
+    return need("colour defaults",
+                dict(re.findall(r'\{ key = "([A-Za-z0-9_]+)", default = "(#[0-9A-Fa-f]{6})" \}', block)))
+
+
+def parse_preset(src):
+    """Pull a built-in preset's fields out of its Lua table. A fresh app launch starts from the
+    THEME_FIELDS defaults, so a field the preset omits is that default -- which is how the
+    expectations below treat anything missing."""
+    colors = {}
+    m = re.search(r'colors\s*=\s*\{(.*?)\}', src, re.S)
+    if m:
+        colors = dict(re.findall(r'([A-Za-z0-9_]+)\s*=\s*"(#[0-9A-Fa-f]{6})"', m.group(1)))
+        src = src[:m.start()] + src[m.end():]
+    fields = {}
+    for key, raw in re.findall(r'^\s*([A-Za-z0-9_]+)\s*=\s*([^,\n]+),', src, re.M):
+        raw = raw.strip()
+        if key in ("colors", "source", "themeName"):
+            continue
+        if raw in ("true", "false"):
+            fields[key] = raw == "true"
+        elif raw.startswith('"'):
+            fields[key] = raw.strip('"')
+        elif re.fullmatch(r'-?\d+(\.\d+)?', raw):
+            fields[key] = float(raw) if "." in raw else int(raw)
+    return fields, colors
+
+
 VIEW = {  # pyui_config.lua lines 19-24
     "games": {"Text": "TEXT_ONLY", "Text + Box Art": "TEXT_AND_IMAGE",
               "Full Screen Grid": "FULLSCREEN_GRID", "Carousel": "CAROUSEL"},
@@ -112,12 +144,19 @@ def expectations(f):
     return a
 
 
-def background_args(f):
+def background_args(f, colors=None):
+    colors = colors or {}
     t = f.get("backgroundType", "Gradient")
     if t == "Solid":
         return ["--gradient", "solid"]
     d = f.get("backgroundGradientDirection", "Vertical").lower()
-    return ["--gradient", "%s:#1E40AF,#155CFB" % d]
+    a = colors.get("background", DEFAULT_COLORS["background"])
+    b = colors.get("backgroundGradient", DEFAULT_COLORS["backgroundGradient"])
+    if a.upper() == b.upper():
+        # both stops the same colour: a gradient was asked for but cannot be distinguished from
+        # a flat fill, so assert flatness rather than a ramp that does not exist.
+        return ["--gradient", "solid"]
+    return ["--gradient", "%s:%s,%s" % (d, a, b)]
 
 
 # Only "SPRUCE Art" recolours the SPRUCE art in two tones. Glyph and Letter each draw one `ink`
@@ -137,6 +176,8 @@ def main():
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
     dom, dflt = parse_domains(), parse_defaults()
+    global DEFAULT_COLORS
+    DEFAULT_COLORS = parse_color_defaults()
     cases, n = [], 0
 
     def add(name, fields=None, body=None, theme=None):
@@ -148,11 +189,13 @@ def main():
         assert re.fullmatch(r"S2\d{3}", theme), "theme name must be S2nnn, got %r" % theme
         if body is not None:
             open(stem + ".lua", "w").write(body)
-            args = []
+            pf, pc = parse_preset(body)
+            args = background_args(pf, pc) + icon_args(pf) + expectations(pf)
         else:
             open(stem + ".lua", "w").write(preset(theme, fields))
             args = background_args(fields) + icon_args(fields) + expectations(fields)
         open(stem + ".theme", "w").write(theme + "\n")
+        assert args, "case %s would ship no assertions at all" % name
         open(stem + ".args", "w").write(" ".join(args) + "\n")
         cases.append(("%03d-%s" % (n, name), theme))
 
