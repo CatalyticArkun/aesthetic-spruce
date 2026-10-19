@@ -92,6 +92,9 @@ jobs:
           sudo apt-get install -y -q p7zip-full zip rsync libcairo2
           python3 -m pip install --quiet cairosvg lupa
 
+      - name: Theme validator self-test
+        run: python3 -m unittest discover -s tests -v
+
       - name: Build
         run: |
           ./build.sh
