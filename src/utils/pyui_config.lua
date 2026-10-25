@@ -123,12 +123,22 @@ function pyuiConfig.build(width, height)
 		displayVolumeNumbers = state.showVolumeNumber and true or false,
 		setTopBarTextToGameSelection = state.topBarShowsGame and true or false,
 		fullScreenGridGameMenuResizeType = state.fullScreenGridFit == "Zoom" and "ZOOM" or "FIT",
+		-- SPRUCE insets the top-bar text by 60 at the 640x480 base; PyUI's own default is 20, which
+		-- leaves the clock tight against the edge of bar art that came from SPRUCE's geometry.
+		topBarInitialXOffset = px(60, s),
 		recentsEnabled = state.showRecents and true or false,
 		favoritesEnabled = state.showFavorites and true or false,
 		collectionsEnabled = state.showCollections and true or false,
 		appsEnabled = true,
 		settingsEnabled = true,
 	}
+
+	-- Set only when hiding: PyUI falls back to its own title when the key is absent, so "" is the
+	-- only way to suppress it (SPRUCE ships ""). Not written inline, because `a and nil or ""`
+	-- yields "" for BOTH branches in Lua and would hide the title unconditionally.
+	if not state.showMainMenuTitle then
+		cfg.mainMenuTitle = ""
+	end
 
 	if (state.boxArtWidth or 0) > 0 then
 		local w = px(state.boxArtWidth, s)

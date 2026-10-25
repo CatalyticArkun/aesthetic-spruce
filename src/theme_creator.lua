@@ -79,6 +79,11 @@ local function writeCredits()
 		"",
 		"Font: " .. tostring(state.fontFamily) .. " (see the licence next to the font in the app's assets/fonts)",
 		"Icons: Lucide (ISC), Kenney Input Prompts (CC0)",
+		"",
+		"Accent Color (spruce's App/AccentColor) is not supported by this theme and never will be:",
+		"it needs an accent/ folder of recolour templates, which Aesthetic does not generate. The",
+		"app detects that and declines, which is the expected outcome. If the folder is added by",
+		"hand the result is undefined and unsupported - rebuild in Aesthetic to change colours.",
 		(state.systemIcons and (state.systemIconStyle == "SPRUCE Art" or state.systemIconStyle == "SPRUCE Mono"))
 				and (
 					"System icons: art from spruceOS's SPRUCE theme by tenlevels (MIT), recoloured in "

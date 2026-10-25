@@ -338,11 +338,17 @@ Two things make this a product decision rather than a chore:
    be the accent. So the selected tab and keyboard text would stay at the build-time colour while
    every highlight moved, and no value of `palette.ink` can express "track the accent".
 
-The recommendation, unless someone wants the feature for its own sake, is to stay opted out: this
-app already lets the user set every colour and rebuilds in about 20 s on an RK3326 board, so
-AccentColor buys a faster path to one colour at the price of two surprises. If it is wanted, do it
-whole — all 53 foreground assets — because a partial manifest recolours the highlights and leaves
-the icons behind, which looks broken rather than partial.
+**Decided 2026-10-25: Aesthetic stays untethered from AccentColor.** Generated themes are
+incompatible with it and will not ship an `accent/` folder. The app declines them by itself, which
+is the expected and supported outcome; every generated theme's README now says so. If anyone adds
+an `accent/` folder to a generated theme by hand, the result is undefined and unsupported — the
+templates would not match how these assets are drawn, and the next rebuild overwrites them anyway.
+Colours are changed by rebuilding in Aesthetic, which is what it is for.
+
+The costing above stays on record so the decision can be revisited with numbers rather than from
+scratch. If it were ever revisited, it must be done whole — all 53 foreground assets — because a
+partial manifest recolours the highlights and leaves the icons behind, which looks broken rather
+than partial.
 
 ## 10. Gotchas
 

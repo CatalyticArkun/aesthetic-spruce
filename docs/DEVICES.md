@@ -28,6 +28,11 @@ has no MagicX support in its menu.
 
 Miyoo A30 and the Mini family: 32-bit, with no LÖVE runtime.
 
+**Accent Color** (spruce's own app) does not work with themes from Aesthetic, and is not meant to.
+It recolours themes that ship its template folder; Aesthetic themes do not, so the app says so and
+changes nothing. That is the expected result, not a fault. Change colours by rebuilding the theme
+in Aesthetic. Forcing Accent Color onto an Aesthetic theme is undefined and unsupported.
+
 ## Device notes
 
 - **RGB30**: a Full spruce update resets the active theme to SPRUCE, because spruce keeps that

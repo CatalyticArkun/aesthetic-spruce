@@ -48,6 +48,7 @@ state.THEME_FIELDS = {
 	{ key = "showVolumeNumber", type = "boolean", default = true }, -- displayVolumeNumbers (SPRUCE sets it)
 	{ key = "topBarShowsGame", type = "boolean", default = true }, -- setTopBarTextToGameSelection
 	{ key = "fullScreenGridFit", type = "string", default = "Fit" }, -- fullScreenGridGameMenuResizeType
+	{ key = "showMainMenuTitle", type = "boolean", default = true }, -- false emits mainMenuTitle ""
 	{ key = "screensaverMinutes", type = "number", default = 1 }, -- screensaver.screensaverTimeoutSec, 0 = off
 }
 

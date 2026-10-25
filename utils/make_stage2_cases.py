@@ -184,6 +184,10 @@ def expectations(f):
     a += ["--expect", "setTopBarTextToGameSelection=%s" % ("true" if f.get("topBarShowsGame", True) else "false")]
     a += ["--expect", 'fullScreenGridGameMenuResizeType="%s"'
           % ("ZOOM" if f.get("fullScreenGridFit", "Fit") == "Zoom" else "FIT")]
+    # mainMenuTitle is written ONLY when the title is hidden: with it shown the key is absent and
+    # PyUI supplies its own, so asserting it then would fail on a correct theme.
+    if not f.get("showMainMenuTitle", True):
+        a += ["--expect", 'mainMenuTitle=""']
     return a
 
 

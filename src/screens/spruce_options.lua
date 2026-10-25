@@ -37,6 +37,7 @@ spruceOptions.ROWS = {
 	{ key = "showVolumeNumber", text = "Volume Number", options = SHOWN, bool = true },
 	{ key = "topBarShowsGame", text = "Top Bar Text", options = TOPBAR, bool = true, trueOption = "Game Name" },
 	{ key = "fullScreenGridFit", text = "Full Screen Art", options = FIT },
+	{ key = "showMainMenuTitle", text = "Main Menu Title", options = SHOWN, bool = true },
 	{ key = "screensaverMinutes", text = "Screensaver", options = SCREENSAVER, minutes = true },
 }
 
