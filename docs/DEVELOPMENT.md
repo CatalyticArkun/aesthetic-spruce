@@ -309,6 +309,41 @@ verified nightly is built from. `AESTHETIC_COMPAT_WARN=1` forces the warning mod
   on its next start. `screensaver.screensaverTimeoutSec <= 0` disables the screensaver.
 - App icons are keyed by the app's `config.json` `icon` filename: ours is `aestheticspruce.png`.
 
+## 9a. AccentColor, and what "friendly" would cost
+
+`App/AccentColor` (spruce 4.5.x) recolours one accent across a theme, on the device. It only
+touches themes that opt in with an `accent/` folder, and it checks for `accent/manifest.json`
+before it reads or writes anything (`accent_picker.py:309`), so a generated theme is declined
+cleanly: a message, exit 0, nothing altered. There is no way for the two to corrupt each other
+today.
+
+Opting in is possible, and the cost is lower than the README's "render with probe colours off
+device" implies, because this app draws its own skin:
+
+* **36 of the 55 skin assets are a single flat foreground fill with alpha** (plates, frames, bars,
+  pictograms: `skin_renderer.lua` draws them with `setColor(withAlpha(fg, a))`). The NUTP template
+  for those is derivable from the rendered PNG alone — the pixels are premultiplied, so
+  `k_accent` is the pixel's alpha and `c0` is zero. No probe rendering, no second pass.
+* **17 mix two colours** — the three `panel` assets (background fill, foreground outline) and the
+  14 `tile` assets (the focused variant inverts). Those need the renderer to emit a foreground
+  mask separately from the background part, which is a real change rather than a post-pass.
+* `background` and `bg-game-item-n` carry no foreground at all and would stay out of the manifest.
+
+Two things make this a product decision rather than a chore:
+
+1. **Who owns the accent.** Rebuilding in Aesthetic rewrites every asset, so an accent the user
+   set on the device is silently discarded on the next build. The theme would need to say so.
+2. **A model mismatch in `grid.selectedcolor`.** On apply, AccentColor sets it from the manifest's
+   static `palette.ink`, while this app sets it to the *foreground* — the very colour that would
+   be the accent. So the selected tab and keyboard text would stay at the build-time colour while
+   every highlight moved, and no value of `palette.ink` can express "track the accent".
+
+The recommendation, unless someone wants the feature for its own sake, is to stay opted out: this
+app already lets the user set every colour and rebuilds in about 20 s on an RK3326 board, so
+AccentColor buys a faster path to one colour at the price of two surprises. If it is wanted, do it
+whole — all 53 foreground assets — because a partial manifest recolours the highlights and leaves
+the icons behind, which looks broken rather than partial.
+
 ## 10. Gotchas
 
 - spruce cards can be case-sensitive FAT32; `require` names must match file case exactly (an

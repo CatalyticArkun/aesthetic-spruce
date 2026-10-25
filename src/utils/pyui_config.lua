@@ -118,6 +118,11 @@ function pyuiConfig.build(width, height)
 		displayBatteryIcon = state.showBattery and true or false,
 		displayBatteryPercent = state.showBattery and true or false,
 		showBottomBarButtons = true,
+		-- SPRUCE sets these three; PyUI defaults the other way, so an unset theme differs from the
+		-- stock one. The volume PICTOGRAMS are a separate gap: PyUI draws them whatever this says.
+		displayVolumeNumbers = state.showVolumeNumber and true or false,
+		setTopBarTextToGameSelection = state.topBarShowsGame and true or false,
+		fullScreenGridGameMenuResizeType = state.fullScreenGridFit == "Zoom" and "ZOOM" or "FIT",
 		recentsEnabled = state.showRecents and true or false,
 		favoritesEnabled = state.showFavorites and true or false,
 		collectionsEnabled = state.showCollections and true or false,

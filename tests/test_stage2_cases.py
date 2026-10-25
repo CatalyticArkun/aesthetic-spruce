@@ -37,11 +37,36 @@ class Stage2Cases(unittest.TestCase):
         __import__("shutil").rmtree(cls.dir, ignore_errors=True)
 
     def test_case_count_and_shape(self):
-        self.assertEqual(len(self.cases), 71, "33 per-option + 4 combinations + 34 presets")
+        """Counts derived from the app, not pinned: an option added without cases is the bug this
+        guards (three added on 2026-10-25 produced no cases while the count was hardcoded at 71)."""
+        import importlib.util as iu
+        spec = iu.spec_from_file_location("gen", os.path.join(ROOT, "utils", "make_stage2_cases.py"))
+        gen = iu.module_from_spec(spec); spec.loader.exec_module(gen)
+        dflt = gen.parse_defaults()
+        dom = gen.parse_domains(dflt)
+        want_opt = sum(len(v) - 1 for k, v in dom.items() if k in dflt)
+        presets = len([f for f in os.listdir(os.path.join(ROOT, "src", "presets")) if f.endswith(".lua")])
         kinds = [s.split("-", 1)[1].split("-")[0] for s, _ in self.cases]
-        self.assertEqual(kinds.count("opt"), 33)
+        self.assertEqual(kinds.count("opt"), want_opt, "one case per non-default option value")
         self.assertEqual(kinds.count("combo"), 4)
-        self.assertEqual(kinds.count("preset"), 34)
+        self.assertEqual(kinds.count("preset"), presets)
+        self.assertEqual(len(self.cases), want_opt + 4 + presets)
+
+    def test_every_option_value_has_a_case(self):
+        """Not just the right count: every value of every domain must appear."""
+        import importlib.util as iu
+        spec = iu.spec_from_file_location("gen", os.path.join(ROOT, "utils", "make_stage2_cases.py"))
+        gen = iu.module_from_spec(spec); spec.loader.exec_module(gen)
+        dflt = gen.parse_defaults(); dom = gen.parse_domains(dflt)
+        stems = " ".join(s for s, _ in self.cases)
+        for key, values in dom.items():
+            if key not in dflt:
+                continue
+            for v in values:
+                if v == dflt[key]:
+                    continue
+                slug = re.sub(r"[^A-Za-z0-9]+", "", str(v))[:14] or "x"
+                self.assertIn("opt-%s-%s" % (key, slug), stems, f"no case for {key}={v!r}")
 
     def test_every_case_is_complete(self):
         for stem, theme in self.cases:

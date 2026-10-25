@@ -28,18 +28,42 @@ def need(what, value):
     return value
 
 
-def parse_domains():
+def parse_domains(fields):
+    """A domain for every THEME_FIELDS key, discovered rather than listed.
+
+    An earlier version enumerated the keys by hand, so three options added on 2026-10-25 produced
+    no cases at all and nothing noticed. Now every field must resolve to a domain or this fails.
+    """
     d = {}
     icons = read("src", "screens", "icons.lua")
     m = need("ICON_STYLES", re.search(r'local ICON_STYLES = \{([^}]*)\}', icons))
     d["systemIconStyle"] = [x.strip().strip('"') for x in m.group(1).split(",") if x.strip()]
 
+    # Every row in spruce_options, not a chosen few: a new row is a new option to cover.
+    # Parsed per line and brace-aware: `options = FIT },` and `options = { "a", "b" },` are both
+    # real shapes, and one regex for both silently truncated domains to a single value.
     so = read("src", "screens", "spruce_options.lua")
-    for key in ("gameListView", "systemsView", "appsView"):
-        m = need(key, re.search(r'\{ key = "%s".*?options = \{([^}]*)\}' % key, so))
-        d[key] = [x.strip().strip('"') for x in m.group(1).split(",") if x.strip()]
-    m = need("SCREENSAVER_MINUTES", re.search(r'local SCREENSAVER_MINUTES = \{([^}]*)\}', so))
-    d["screensaverMinutes"] = [int(x) for x in m.group(1).split(",") if x.strip()]
+    named = dict(re.findall(r'local ([A-Z_]+) = \{([^}]*)\}', so))
+    for line in so.splitlines():
+        m = re.match(r'\s*\{ key = "([A-Za-z0-9_]+)",.*?options = (.*)$', line)
+        if not m:
+            continue
+        key, tail = m.group(1), m.group(2).strip()
+        if tail.startswith("{"):
+            raw = tail[1:tail.index("}")]
+        else:
+            raw = named.get(tail.split(",")[0].strip().rstrip("}").strip(), "")
+        values = [x.strip().strip('"') for x in raw.split(",") if x.strip()]
+        if "minutes = true" in line:
+            mm = need("SCREENSAVER_MINUTES", re.search(r'local SCREENSAVER_MINUTES = \{([^}]*)\}', so))
+            d[key] = [int(x) for x in mm.group(1).split(",") if x.strip()]
+        elif "bool = true" in line:
+            d[key] = [True, False]
+        else:
+            d[key] = values
+        if len(d[key]) < 2:
+            sys.exit("domain for %s parsed as %r: a one-value domain means the parse failed"
+                     % (key, d[key]))
 
     fonts = read("src", "ui", "fonts.lua")
     fam = need("font families", re.findall(r'name = "([^"]+)",\s*\n\s*ttf = "assets/fonts/', fonts))
@@ -52,9 +76,22 @@ def parse_domains():
     d["homeScreenLayout"] = ["Grid", "List"]            # home_screen_layout.lua options
     d["backgroundType"] = ["Solid", "Gradient"]          # background.lua typeToggle
     d["backgroundGradientDirection"] = ["Vertical", "Horizontal"]  # background.lua directionToggle
-    for b in ("systemIcons", "showTopBarText", "showBottomBar", "showClock", "showBattery",
-              "showRecents", "showCollections", "showFavorites", "showIndex"):
-        d[b] = [True, False]
+    d["systemIcons"] = [True, False]                     # icons.lua Disabled/Enabled
+    # Booleans on other screens (bars, battery, clock): the type gives the domain.
+    for k, v in fields.items():
+        if isinstance(v, bool) and k not in d:
+            d[k] = [True, False]
+
+    # Fail closed on anything new. These are the fields a sweep cannot or should not enumerate.
+    NOT_SWEPT = {
+        "themeName",      # free text, and every case needs its own name anyway
+        "boxArtWidth",    # the options are generated from the screen size at load time
+    }
+    unresolved = [k for k in fields if k not in d and k not in NOT_SWEPT]
+    if unresolved:
+        sys.exit("no domain for THEME_FIELDS key(s): %s\n"
+                 "Add them to parse_domains (or to NOT_SWEPT with a reason) -- an option with no "
+                 "domain is an option the matrix never tests." % ", ".join(unresolved))
     return d
 
 
@@ -141,6 +178,12 @@ def expectations(f):
                      ("showIndex", "showIndexText")):
         a += ["--expect", "%s=%s" % (cfg, "true" if f.get(key, True) else "false")]
     a += ["--expect", "displayBatteryIcon=%s" % ("true" if f.get("showBattery", True) else "false")]
+    # Added 2026-10-25 with the options themselves: SPRUCE sets these three and PyUI defaults the
+    # other way, so a theme that omits them does not match the stock one.
+    a += ["--expect", "displayVolumeNumbers=%s" % ("true" if f.get("showVolumeNumber", True) else "false")]
+    a += ["--expect", "setTopBarTextToGameSelection=%s" % ("true" if f.get("topBarShowsGame", True) else "false")]
+    a += ["--expect", 'fullScreenGridGameMenuResizeType="%s"'
+          % ("ZOOM" if f.get("fullScreenGridFit", "Fit") == "Zoom" else "FIT")]
     return a
 
 
@@ -175,7 +218,8 @@ def icon_args(f):
 def main():
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
-    dom, dflt = parse_domains(), parse_defaults()
+    dflt = parse_defaults()
+    dom = parse_domains(dflt)
     global DEFAULT_COLORS
     DEFAULT_COLORS = parse_color_defaults()
     cases, n = [], 0
