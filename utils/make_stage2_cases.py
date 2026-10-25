@@ -159,44 +159,47 @@ def preset(name, fields):
     return 'return { themeName = "%s", %s, %s }\n' % (name, body, COLORS)
 
 
+DEFAULTS = {}
+
+
 def expectations(f):
     """--expect args that follow from pyui_config.lua, and only those we can derive exactly."""
     a = []
     a.append("--expect")
-    a.append("mainMenuViewType=%s" % ('"GRID"' if f.get("homeScreenLayout", "Grid") == "Grid" else '"TEXT_ONLY"'))
+    a.append("mainMenuViewType=%s" % ('"GRID"' if f.get("homeScreenLayout", DEFAULTS["homeScreenLayout"]) == "Grid" else '"TEXT_ONLY"'))
     # systemIcons=false forces TEXT_ONLY regardless of systemsView (pyui_config.lua:92)
-    if not f.get("systemIcons", True):
+    if not f.get("systemIcons", DEFAULTS["systemIcons"]):
         sv = "TEXT_ONLY"
     else:
-        sv = VIEW["systems"].get(f.get("systemsView", "Grid"), "GRID")
+        sv = VIEW["systems"].get(f.get("systemsView", DEFAULTS["systemsView"]), "GRID")
     a += ["--expect", 'systemSelectViewType="%s"' % sv]
-    a += ["--expect", 'gameSelectionViewType="%s"' % VIEW["games"].get(f.get("gameListView", "Text + Box Art"), "TEXT_AND_IMAGE")]
-    a += ["--expect", 'appMenuViewType="%s"' % VIEW["apps"].get(f.get("appsView", "Icons + Details"), "ICON_AND_DESC")]
+    a += ["--expect", 'gameSelectionViewType="%s"' % VIEW["games"].get(f.get("gameListView", DEFAULTS["gameListView"]), "TEXT_AND_IMAGE")]
+    a += ["--expect", 'appMenuViewType="%s"' % VIEW["apps"].get(f.get("appsView", DEFAULTS["appsView"]), "ICON_AND_DESC")]
     for key, cfg in (("showTopBarText", "showTopBarText"), ("showBottomBar", "showBottomBar"),
                      ("showClock", "showClock"), ("showRecents", "recentsEnabled"),
                      ("showFavorites", "favoritesEnabled"), ("showCollections", "collectionsEnabled"),
                      ("showIndex", "showIndexText")):
-        a += ["--expect", "%s=%s" % (cfg, "true" if f.get(key, True) else "false")]
-    a += ["--expect", "displayBatteryIcon=%s" % ("true" if f.get("showBattery", True) else "false")]
+        a += ["--expect", "%s=%s" % (cfg, "true" if f.get(key, DEFAULTS[key]) else "false")]
+    a += ["--expect", "displayBatteryIcon=%s" % ("true" if f.get("showBattery", DEFAULTS["showBattery"]) else "false")]
     # Added 2026-10-25 with the options themselves: SPRUCE sets these three and PyUI defaults the
     # other way, so a theme that omits them does not match the stock one.
-    a += ["--expect", "displayVolumeNumbers=%s" % ("true" if f.get("showVolumeNumber", True) else "false")]
-    a += ["--expect", "setTopBarTextToGameSelection=%s" % ("true" if f.get("topBarShowsGame", True) else "false")]
+    a += ["--expect", "displayVolumeNumbers=%s" % ("true" if f.get("showVolumeNumber", DEFAULTS["showVolumeNumber"]) else "false")]
+    a += ["--expect", "setTopBarTextToGameSelection=%s" % ("true" if f.get("topBarShowsGame", DEFAULTS["topBarShowsGame"]) else "false")]
     a += ["--expect", 'fullScreenGridGameMenuResizeType="%s"'
-          % ("ZOOM" if f.get("fullScreenGridFit", "Fit") == "Zoom" else "FIT")]
+          % ("ZOOM" if f.get("fullScreenGridFit", DEFAULTS["fullScreenGridFit"]) == "Zoom" else "FIT")]
     # mainMenuTitle is written ONLY when the title is hidden: with it shown the key is absent and
     # PyUI supplies its own, so asserting it then would fail on a correct theme.
-    if not f.get("showMainMenuTitle", True):
+    if not f.get("showMainMenuTitle", DEFAULTS["showMainMenuTitle"]):
         a += ["--expect", 'mainMenuTitle=""']
     return a
 
 
 def background_args(f, colors=None):
     colors = colors or {}
-    t = f.get("backgroundType", "Gradient")
+    t = f.get("backgroundType", DEFAULTS["backgroundType"])
     if t == "Solid":
         return ["--gradient", "solid"]
-    d = f.get("backgroundGradientDirection", "Vertical").lower()
+    d = f.get("backgroundGradientDirection", DEFAULTS["backgroundGradientDirection"]).lower()
     a = colors.get("background", DEFAULT_COLORS["background"])
     b = colors.get("backgroundGradient", DEFAULT_COLORS["backgroundGradient"])
     if a.upper() == b.upper():
@@ -213,9 +216,9 @@ TWO_TONE_STYLES = {"SPRUCE Art"}
 
 
 def icon_args(f):
-    if not f.get("systemIcons", True):
+    if not f.get("systemIcons", DEFAULTS["systemIcons"]):
         return []            # no icons directory at all; nothing to assert
-    style = f.get("systemIconStyle", "Glyph")
+    style = f.get("systemIconStyle", DEFAULTS["systemIconStyle"])
     return ["--icon-style", "multi" if style in TWO_TONE_STYLES else "mono"]
 
 
@@ -224,8 +227,9 @@ def main():
     os.makedirs(out, exist_ok=True)
     dflt = parse_defaults()
     dom = parse_domains(dflt)
-    global DEFAULT_COLORS
+    global DEFAULT_COLORS, DEFAULTS
     DEFAULT_COLORS = parse_color_defaults()
+    DEFAULTS = dflt
     cases, n = [], 0
 
     def add(name, fields=None, body=None, theme=None):

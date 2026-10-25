@@ -126,6 +126,8 @@ function pyuiConfig.build(width, height)
 		-- SPRUCE insets the top-bar text by 60 at the 640x480 base; PyUI's own default is 20, which
 		-- leaves the clock tight against the edge of bar art that came from SPRUCE's geometry.
 		topBarInitialXOffset = px(60, s),
+		-- One row of tiles: 4 on most panels, 5 on 16:9, matching PyUI's own int(4*multiplier).
+		mainMenuColCount = state.mainMenuColumns(),
 		recentsEnabled = state.showRecents and true or false,
 		favoritesEnabled = state.showFavorites and true or false,
 		collectionsEnabled = state.showCollections and true or false,

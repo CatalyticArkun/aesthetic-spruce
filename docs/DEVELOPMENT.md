@@ -309,6 +309,23 @@ verified nightly is built from. `AESTHETIC_COMPAT_WARN=1` forces the warning mod
   on its next start. `screensaver.screensaverTimeoutSec <= 0` disables the screensaver.
 - App icons are keyed by the app's `config.json` `icon` filename: ours is `aestheticspruce.png`.
 
+### Main-menu defaults
+
+PyUI draws the main menu as one row: `mainMenuRowCount` defaults to 1 and `mainMenuColCount` to
+`int(4 * width_multiplier)`, which is 4 on every panel this app supports except 16:9, where it is
+5. Six tiles exist — Recents, Collections, Favorites, Games, Apps, Settings — and only Games is
+unconditional, so more enabled tiles than columns means the extras are simply not drawn.
+
+`state.applyMainMenuDefaults()` therefore sizes the tile set to the device: Games, Apps and
+Settings always, then Favorites, then Recents, then Collections as slots allow. On a 4-wide panel
+that is Favorites + the three, which is exactly the stock SPRUCE set (SPRUCE ships
+`recentsEnabled: false`, and PyUI's own default for `collectionsEnabled` is already false). On
+16:9 the fifth slot takes Recents. A List layout scrolls, so it enables all six.
+
+It runs on first start (when no settings file exists) and whenever the home-screen layout changes,
+so the Spruce Options rows always show what the layout will really produce; the user can still
+change any of them afterwards. `mainMenuColCount` is emitted with the same rule, clamped to 4..5.
+
 ## 9a. AccentColor, and what "friendly" would cost
 
 `App/AccentColor` (spruce 4.5.x) recolours one accent across a theme, on the device. It only

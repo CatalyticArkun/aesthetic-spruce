@@ -41,8 +41,8 @@ state.THEME_FIELDS = {
 	{ key = "gameListView", type = "string", default = "Text + Box Art" }, -- gameSelectionViewType
 	{ key = "systemsView", type = "string", default = "Grid" }, -- systemSelectViewType
 	{ key = "appsView", type = "string", default = "Icons + Details" }, -- appMenuViewType
-	{ key = "showRecents", type = "boolean", default = true }, -- recentsEnabled
-	{ key = "showCollections", type = "boolean", default = true }, -- collectionsEnabled
+	{ key = "showRecents", type = "boolean", default = false }, -- recentsEnabled (SPRUCE turns it off)
+	{ key = "showCollections", type = "boolean", default = false }, -- collectionsEnabled (PyUI default too)
 	{ key = "showFavorites", type = "boolean", default = true }, -- favoritesEnabled
 	{ key = "showIndex", type = "boolean", default = true }, -- showIndexText / includeIndexText ("A 02/13")
 	{ key = "showVolumeNumber", type = "boolean", default = true }, -- displayVolumeNumbers (SPRUCE sets it)
@@ -62,6 +62,37 @@ state.COLOR_FIELDS = {
 }
 
 -- Application (non-theme) state
+--- Main-menu tiles that fit the device, the way the stock SPRUCE theme is laid out.
+---
+--- The grid is one row (PyUI mainMenuRowCount defaults to 1), so only as many tiles fit as there
+--- are columns. PyUI sizes those itself as int(4 * width_multiplier), which works out at 4 on
+--- every supported panel except 16:9, where it is 5; we follow that rule rather than invent one.
+--- Games, Apps and Settings are always on, so the remaining slots go to Favorites first, then
+--- Recents, and Collections last -- which reproduces SPRUCE's own set on a 4-wide screen.
+--- A list scrolls, so it shows everything.
+function state.mainMenuColumns()
+	local w, h = state.screenWidth or 640, state.screenHeight or 480
+	if w <= 0 or h <= 0 then
+		return 4
+	end
+	local scaleW, scaleH = w / 640, h / 480
+	local widthMultiplier = scaleW > scaleH and (((scaleW - scaleH) / scaleH) + 1) or 1
+	return math.max(4, math.min(5, math.floor(4 * widthMultiplier)))
+end
+
+--- Set the three optional tiles to this layout's defaults. Called on first run and whenever the
+--- home screen layout changes, so the rows always show what the layout will actually produce.
+function state.applyMainMenuDefaults()
+	if state.homeScreenLayout == "List" then
+		state.showRecents, state.showCollections, state.showFavorites = true, true, true
+		return
+	end
+	local spare = state.mainMenuColumns() - 3 -- Games, Apps and Settings are always shown
+	state.showFavorites = spare >= 1
+	state.showRecents = spare >= 2
+	state.showCollections = spare >= 3
+end
+
 state.applicationName = "Aesthetic Spruce"
 state.screenWidth = 0 -- set in main.lua
 state.screenHeight = 0 -- set in main.lua
