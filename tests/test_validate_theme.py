@@ -150,6 +150,17 @@ class ValidateTheme(unittest.TestCase):
         rc, out = run(self.theme(screensaver_sizes=([64, 22, 18], [64, 22, 18])))
         self.assertEqual(rc, 0, out)
 
+    def test_prebake_ignores_icons_only_where_spruce_has_no_icon_set(self):
+        sys.path.insert(0, os.path.join(HERE, "..", "utils"))
+        from validate_theme import prebake_missing
+        lines = ["Themes/T is missing 2 item(s) for 480x800:", "  icons_480x800/gb.png",
+                 "  skin_480x800/background.png is 640x480, expected 480x800"]
+        icon_sets = {"640x480": {}, "720x720": {}}
+        self.assertEqual(prebake_missing(lines, "480x800", icon_sets),
+                         ["skin_480x800/background.png is 640x480, expected 480x800"])
+        self.assertEqual(len(prebake_missing(lines, "480x800", dict(icon_sets, **{"480x800": {}}))), 2)
+        self.assertEqual(prebake_missing(lines[:2], "480x800", icon_sets), [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,7 +16,8 @@ local logger = require("utils.logger")
 local iconRenderer = {}
 
 -- App icons not in the SPRUCE reference set but worth theming (keyed by the app's config.json icon name)
-iconRenderer.EXTRA_APP_ICONS = { "aestheticspruce", "songo", "cheevos" }
+-- (cheevos left this list once SPRUCE shipped its own tile)
+iconRenderer.EXTRA_APP_ICONS = { "aestheticspruce", "songo" }
 -- Systems SPRUCE ships no icon for (keyed by the Emu config.json icon name); sized like the others.
 -- Empty since SPRUCE 4.5 (coco, j2me, pc98 gained art); kept for the next system that ships without any.
 iconRenderer.EXTRA_SYSTEM_ICONS = {}

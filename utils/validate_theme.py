@@ -109,6 +109,16 @@ def pyui_keys(spruce):
     keys = set(re.findall(r'_data(?:\.get\(|\[)"([A-Za-z0-9_]+)"', src))
     return keys | {"name", "author", "description"}
 
+def prebake_missing(lines, res, icon_sets):
+    """Items prebake --check lists for res, less icons_<res>/ where SPRUCE keeps no icon set for it.
+
+    PyUI patches only when config_<res>.json is missing and otherwise reads icons/ when icons_<res>/
+    is absent (theme.py); the checker predates SPRUCE serving 480x800 and 720x480 that way."""
+    missing = [l.strip() for l in lines if l.startswith("  ")]
+    if icon_sets and res not in icon_sets:
+        missing = [m for m in missing if not m.startswith(f"icons_{res}/")]
+    return missing
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("theme")
@@ -284,6 +294,10 @@ def main():
         for res in sorted(sets):
             if res == "640x480": continue
             r = subprocess.run([sys.executable, pb, "--repo", tmp, "--theme", "Themes/" + tname, "--size", res, "--check"], capture_output=True, text=True)
+            out = r.stdout.splitlines()
+            if r.returncode != 0 and out and "is missing" in out[0] and not prebake_missing(out, res, spec["icons"]):
+                print(f"prebake --check {res}: OK (no icons_{res}/: PyUI reads icons/, as for SPRUCE)")
+                continue
             tag = "OK" if r.returncode == 0 else "FAIL"
             print(f"prebake --check {res}: {tag} {(r.stdout or r.stderr).strip().splitlines()[-1] if (r.stdout or r.stderr).strip() else ''}")
             if r.returncode != 0: warnings.append(f"prebake --check {res} failed (see above)")

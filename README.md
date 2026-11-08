@@ -49,7 +49,7 @@ Pick colours, a gradient, a font and a layout on the handheld; the app writes a 
 ## 📦 Installation
 
 > [!IMPORTANT]
-> Built for **spruceOS 4.3.x, 4.4.x and 4.5.x** on aarch64 devices. The Miyoo A30 and Mini family are not supported — see [docs/DEVICES.md](docs/DEVICES.md) for the full list.
+> Built for **spruceOS 4.3.x, 4.4.x, 4.5.x and 4.6.x** on aarch64 devices. The Miyoo A30 and Mini family are not supported — see [docs/DEVICES.md](docs/DEVICES.md) for the full list.
 
 1. Download `AestheticSpruce_vX.Y.Z_sd-overlay.zip` from [Releases](https://github.com/CatalyticArkun/aesthetic-spruce/releases). Nightlies are marked pre-release.
 2. Unzip it onto the root of the spruceOS card, so that `App/AestheticSpruce` sits next to your other apps.

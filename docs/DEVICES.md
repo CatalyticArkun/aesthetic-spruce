@@ -1,7 +1,7 @@
 # Devices
 
-Aesthetic Spruce targets **aarch64 spruceOS 4.3.x, 4.4.x and 4.5.x**, tracked to 4.5.2 stable /
-4.5.5 nightly. The app warns once at start if the card runs anything else, or if PyUI's theme
+Aesthetic Spruce targets **aarch64 spruceOS 4.3.x, 4.4.x, 4.5.x and 4.6.x**, tracked to 4.6.0 stable /
+4.6.1 nightly. The app warns once at start if the card runs anything else, or if PyUI's theme
 loader has changed in a way the generator does not understand.
 
 ## Verified on hardware
@@ -20,8 +20,8 @@ gradients, icon tones, PyUI config keys and image formats.
 
 ## Expected to work, not yet run
 
-TrimUI Brick and Smart Pro, GKD Pixel2, the rest of the Anbernic RG XX family, RGB30, the MagicX
-XU20 and the BatleXP G350. The MagicX boards need spruceOS 4.4.2 or a Development build: 4.4.1
+TrimUI Brick (stock and on oakMOSS) and Smart Pro, GKD Pixel2, the rest of the Anbernic RG XX
+family, RGB30, the MagicX XU20 and the BatleXP G350. The MagicX boards need spruceOS 4.4.2 or a Development build: 4.4.1
 has no MagicX support in its menu.
 
 ## Not supported

@@ -111,8 +111,9 @@ To add an option:
 
 1. Clear `theme_working/`.
 2. For each resolution (`paths.BASE_RESOLUTION`, plus the native one when different and SPRUCE has a
-   set for it; all seven when
-   `state.allResolutions`): render the skin, render the icons (if `systemIcons`), write the config.
+   skin set for it; all eight when
+   `state.allResolutions`): render the skin, render the icons (if `systemIcons`, and only where
+   SPRUCE keeps an `icons_<W>x<H>` set: at 480x800 and 720x480 PyUI reads `icons/`), write the config.
 3. Copy the chosen TTF, render `preview.png` (640x480 with the theme name), write `README.md`.
 4. `mv` the folder into `Themes/<sanitised name>` (next free `(n)` suffix), `sync`.
 
@@ -128,7 +129,10 @@ Skin: `pyui_assets.lua` lists the ~47 assets PyUI actually reads (grep of every 
 literal in `App/PyUI/main-ui`) with a `kind` (background, bar, plate, frame, panel, pictogram,
 tile, empty) and options; `skin_spec.lua` gives each asset's size per resolution (regenerate it when spruce changes SPRUCE:
 the 4.4.3 tree added the Zero 40's 480x800 set and `ic-cheevos-mark`, and 4.5.3 added art for
-fbneo, fake08, vic20, coco, j2me and pc98 and resized the saturn, atomiswave and naomi tiles), generated from
+fbneo, fake08, vic20, coco, j2me and pc98 and resized the saturn, atomiswave and naomi tiles; Development
+6861c2b56, 4.5.7, added the 720x540 set, loopy and the cheevos and zitch app tiles, deleted 34 assets
+nothing read, and dropped the 480x800 and 720x480 icon sets that duplicated `icons/`; 4.6.0 and the 4.6.1 nightly left
+SPRUCE as it was), generated from
 spruce's SPRUCE theme by `utils/generate_skin_spec.py` (regenerate when spruce changes SPRUCE).
 Exceptions: `background` is always the full screen (PyUI's patcher rule; SPRUCE's own 1280x720 file
 is 960x720), `icon-A-54`/`icon-B-54` are compact buttons (SPRUCE ships transparent 640x54 strips).
@@ -140,7 +144,7 @@ other name is a PNG under `assets/icons/png/lucide/{glyph,ui}/`. Unknown ids get
 The system tiles rendered are SPRUCE's icon list (`skin_spec.lua`) plus
 `icon_renderer.EXTRA_SYSTEM_ICONS`, systems SPRUCE ships no art for (empty since 4.5, which added
 art for COCO, J2ME and PC-98), at the common tile size; `EXTRA_APP_ICONS` does the same for apps
-(ours, Songo#5, Cheevos). Ids are the basename of
+(ours and Songo#5). Ids are the basename of
 the `icon` field in `Emu/<SYS>/config.json` or `App/<name>/config.json`.
 
 The *SPRUCE Art* style (`systemIconStyle = "SPRUCE Art"`) takes each system's art from spruce's own
@@ -274,11 +278,17 @@ update deletes, so the active theme falls back to SPRUCE (the theme folder is ke
 A30 and the Mini family (32-bit).
 
 MagicX: PyUI shows an app when its `devices` list names any token the device reports
-(`get_device_names()`); the MagicX boards report their own name plus the family token
-`MAGICX_A133P`, which `spruce/config.json` lists. The Zero40 runs 480x800 portrait, which SPRUCE has
-no set for, so it gets the base set (PyUI's ThemePatcher scales it on the device) and the app lays
-itself out portrait. Their rootfs libraries (glibc, the SDL2 in `/usr/magicx/lib`, the LÖVE media
-libraries) have not been measured.
+(`get_device_names()`). The MagicX boards report their own name (`MAGICX_ZERO28`, `MAGICX_ZERO40`,
+`MAGICX_XU20`) plus a family token: `MAGICX_A133P` up to 4.5.6, `OAKMOSS_A133P` since
+#1937 (2026-11-01, first released in 4.6.0). `spruce/config.json` lists the three board names, which every version reports,
+and keeps `MAGICX_A133P`; it does not list `OAKMOSS_A133P`, which would also show the app on the
+untested Powkiddy V90S and V20. The Zero40 runs 480x800 portrait: SPRUCE has a skin set for it but
+serves its icons from `icons/`, and the app lays itself out portrait. Their rootfs libraries (glibc,
+the SDL2 in `/usr/magicx/lib`, the LÖVE media libraries) have not been measured.
+
+oakMOSS Brick: the `BrickOakMOSS` platform (4.6.0) (`PLATFORM_PARENT=Brick`) reports `TRIMUI_BRICK`
+too, so the app shows there. Its pad is TrimUI's own `trimui_inputd` "TRIMUI Player1" (045e:028e), as
+on the stock Brick, so `spruce/launch.sh` puts it in the same both-swaps group. Not run on hardware.
 
 liblove links against SDL2, freetype, openal, z, modplug, vorbisfile/vorbis/ogg, theoradec, mpg123,
 stdc++, gcc_s, c. Bundled and loaded first: liblove, luajit. Never bundled: SDL2 (each platform's
@@ -288,7 +298,7 @@ theoradec, mpg123, modplug; all taken from the spruce release tree, see `lib/fal
 Fleet glibc floor for spruce's own binaries is 2.29; measured devices run 2.33 (TrimUI) and 2.38
 (Flip, Miniloong).
 
-`src/spruce/compat.lua`: `SUPPORTED_FAMILIES` (4.3, 4.4, 4.5) and `TESTED_VERSIONS`; it also probes
+`src/spruce/compat.lua`: `SUPPORTED_FAMILIES` (4.3 to 4.6) and `TESTED_VERSIONS`; it also probes
 `App/PyUI/main-ui/themes/theme.py` for the asset and layout names the generator depends on. Add a
 family only after `git diff --ignore-cr-at-eol <last supported tag> <new tag> --
 App/PyUI/main-ui/themes/theme.py App/PyUI/main-ui/themes/theme_patcher.py` shows no layout change
