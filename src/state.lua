@@ -195,6 +195,11 @@ function state.importTheme(t)
 			state[f.key] = f.default
 		end
 	end
+	-- No tile flag at all (every built-in preset): size the main menu to this device and the
+	-- snapshot's layout, as on first run; a snapshot naming any of them keeps its own choice
+	if t.showRecents == nil and t.showCollections == nil and t.showFavorites == nil then
+		state.applyMainMenuDefaults()
+	end
 	local colors = type(t.colors) == "table" and t.colors or {}
 	for _, c in ipairs(state.COLOR_FIELDS) do
 		local v = colors[c.key]

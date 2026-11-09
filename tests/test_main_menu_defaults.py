@@ -8,7 +8,7 @@ Collections -- which reproduces the stock SPRUCE set on a 4-wide screen.
 
 Run: python3 -m unittest discover tests
 """
-import os, re, unittest
+import glob, os, re, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, ".."))
@@ -82,6 +82,46 @@ class MainMenuDefaults(unittest.TestCase):
         got = dict(re.findall(r'\{ key = "(show(?:Recents|Collections|Favorites))".*?default = (\w+)', block))
         self.assertEqual(got, {"showRecents": "false", "showCollections": "false",
                                "showFavorites": "true"})
+
+
+def full_state():
+    """The whole state.lua through require(), with its error and log helpers stubbed."""
+    L = lupa.LuaRuntime(unpack_returned_tuples=True)
+    L.execute(f'package.path = "{os.path.join(ROOT, "src")}/?.lua;" .. package.path\n'
+              'package.preload["utils.fail"] = function() return function(m) return false, m end end\n'
+              'package.preload["utils.logger"] = function()\n'
+              '  return setmetatable({}, { __index = function() return function() end end }) end')
+    return L, L.eval('(require("state"))')
+
+
+@unittest.skipIf(lupa is None, "lupa not installed")
+class ImportedPresets(unittest.TestCase):
+    """A preset sets the look, not the tiles: one without tile flags gets the device's defaults."""
+
+    def load(self, w, h, snapshot_lua):
+        L, s = full_state()
+        s.screenWidth, s.screenHeight = w, h
+        ok = s.importTheme(L.eval(snapshot_lua))
+        self.assertTrue(ok if not isinstance(ok, tuple) else ok[0])
+        return {n: bool(s[k]) for n, k in (("Favorites", "showFavorites"), ("Recents", "showRecents"),
+                                           ("Collections", "showCollections"))}, s.homeScreenLayout
+
+    def test_every_builtin_preset_follows_the_device(self):
+        presets = sorted(glob.glob(os.path.join(ROOT, "src", "presets", "*.lua")))
+        self.assertGreater(len(presets), 0)
+        for p in presets:
+            for (w, h), grid in (((1280, 720), {"Favorites": True, "Recents": True, "Collections": False}),
+                                 ((640, 480), {"Favorites": True, "Recents": False, "Collections": False})):
+                tiles, layout = self.load(w, h, f'dofile("{p}")')
+                want = dict.fromkeys(grid, True) if layout == "List" else grid
+                self.assertEqual(tiles, want, f"{os.path.basename(p)} at {w}x{h} ({layout})")
+
+    def test_a_snapshot_naming_a_tile_keeps_its_choice(self):
+        tiles, _ = self.load(1280, 720, '{ homeScreenLayout = "Grid", showRecents = false }')
+        self.assertEqual(tiles, {"Favorites": True, "Recents": False, "Collections": False})
+        tiles, _ = self.load(640, 480, '{ homeScreenLayout = "Grid", showFavorites = true, '
+                                        'showRecents = true, showCollections = true }')
+        self.assertEqual(tiles, {"Favorites": True, "Recents": True, "Collections": True})
 
 
 if __name__ == "__main__":

@@ -176,10 +176,21 @@ def expectations(f):
     a += ["--expect", 'gameSelectionViewType="%s"' % VIEW["games"].get(f.get("gameListView", DEFAULTS["gameListView"]), "TEXT_AND_IMAGE")]
     a += ["--expect", 'appMenuViewType="%s"' % VIEW["apps"].get(f.get("appsView", DEFAULTS["appsView"]), "ICON_AND_DESC")]
     for key, cfg in (("showTopBarText", "showTopBarText"), ("showBottomBar", "showBottomBar"),
-                     ("showClock", "showClock"), ("showRecents", "recentsEnabled"),
-                     ("showFavorites", "favoritesEnabled"), ("showCollections", "collectionsEnabled"),
-                     ("showIndex", "showIndexText")):
+                     ("showClock", "showClock"), ("showIndex", "showIndexText")):
         a += ["--expect", "%s=%s" % (cfg, "true" if f.get(key, DEFAULTS[key]) else "false")]
+    tiles = (("showRecents", "recentsEnabled"), ("showFavorites", "favoritesEnabled"),
+             ("showCollections", "collectionsEnabled"))
+    if any(key in f for key, _ in tiles):
+        for key, cfg in tiles:
+            a += ["--expect", "%s=%s" % (cfg, "true" if f.get(key, DEFAULTS[key]) else "false")]
+    elif f.get("homeScreenLayout", DEFAULTS["homeScreenLayout"]) == "List":
+        # no tile flag: importTheme sizes the menu (state.applyMainMenuDefaults); a list shows all
+        a += ["--expect", "recentsEnabled=true", "--expect", "favoritesEnabled=true",
+              "--expect", "collectionsEnabled=true"]
+    else:
+        # a grid row holds 4 or 5: Favorites always fits, Collections never; Recents only at 16:9,
+        # which a case built at every size cannot know, so it is left unasserted
+        a += ["--expect", "favoritesEnabled=true", "--expect", "collectionsEnabled=false"]
     a += ["--expect", "displayBatteryIcon=%s" % ("true" if f.get("showBattery", DEFAULTS["showBattery"]) else "false")]
     # Added 2026-10-25 with the options themselves: SPRUCE sets these three and PyUI defaults the
     # other way, so a theme that omits them does not match the stock one.

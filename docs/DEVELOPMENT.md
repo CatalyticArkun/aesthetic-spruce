@@ -332,9 +332,15 @@ that is Favorites + the three, which is exactly the stock SPRUCE set (SPRUCE shi
 `recentsEnabled: false`, and PyUI's own default for `collectionsEnabled` is already false). On
 16:9 the fifth slot takes Recents. A List layout scrolls, so it enables all six.
 
-It runs on first start (when no settings file exists) and whenever the home-screen layout changes,
-so the Spruce Options rows always show what the layout will really produce; the user can still
-change any of them afterwards. `mainMenuColCount` is emitted with the same rule, clamped to 4..5.
+It runs on first start (when no settings file exists), whenever the home-screen layout changes, and
+when a preset or settings snapshot is loaded that names none of the three tile flags (every built-in
+preset; `state.importTheme`), so the Spruce Options rows always show what the layout will really
+produce; the user can still change any of them afterwards. A snapshot naming any tile flag (saved
+settings, user presets) keeps its own choice. Until 2026-11-08 a loaded preset fell back to the
+static field defaults instead, which on 16:9 left the fifth slot empty and gave List presets
+(minui, minui_light) Favorites only. `mainMenuColCount` is emitted with the same rule, clamped to 4..5.
+The stage-2 cases follow it: without tile flags they expect all three on in a List, and Favorites
+on and Collections off in a Grid, leaving Recents unasserted because it depends on the panel.
 
 ## 9a. AccentColor, and what "friendly" would cost
 
