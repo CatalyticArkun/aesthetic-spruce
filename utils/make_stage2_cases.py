@@ -188,9 +188,9 @@ def expectations(f):
         a += ["--expect", "recentsEnabled=true", "--expect", "favoritesEnabled=true",
               "--expect", "collectionsEnabled=true"]
     else:
-        # a grid row holds 4 or 5: Favorites always fits, Collections never; Recents only at 16:9,
-        # which a case built at every size cannot know, so it is left unasserted
-        a += ["--expect", "favoritesEnabled=true", "--expect", "collectionsEnabled=false"]
+        # a grid holds 4 (one row), 5 (16:9) or 6 (the Zero 40's 2x3): Favorites always fits;
+        # Recents and Collections depend on the panel, which a case built at every size cannot know
+        a += ["--expect", "favoritesEnabled=true"]
     a += ["--expect", "displayBatteryIcon=%s" % ("true" if f.get("showBattery", DEFAULTS["showBattery"]) else "false")]
     # Added 2026-10-25 with the options themselves: SPRUCE sets these three and PyUI defaults the
     # other way, so a theme that omits them does not match the stock one.

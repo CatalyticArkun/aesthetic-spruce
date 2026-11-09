@@ -321,16 +321,21 @@ verified nightly is built from. `AESTHETIC_COMPAT_WARN=1` forces the warning mod
 
 ### Main-menu defaults
 
-PyUI draws the main menu as one row: `mainMenuRowCount` defaults to 1 and `mainMenuColCount` to
-`int(4 * width_multiplier)`, which is 4 on every panel this app supports except 16:9, where it is
-5. Six tiles exist — Recents, Collections, Favorites, Games, Apps, Settings — and only Games is
-unconditional, so more enabled tiles than columns means the extras are simply not drawn.
+PyUI draws the main menu as `mainMenuRowCount` rows (default 1) of `mainMenuColCount` tiles
+(default `int(4 * width_multiplier)`: 4 on every panel this app supports except 16:9, where it is
+5). Six tiles exist — Recents, Collections, Favorites, Games, Apps, Settings — and only Games is
+unconditional, so more enabled tiles than columns x rows means the extras are simply not drawn.
+SPRUCE overrides the grid on one panel: since 2026-09-25 (7d9cd10f9) its `config_480x800.json`
+gives the Zero 40 2 columns x 3 rows with Recents and Collections on, plus
+`multiRowGridTextYOffset: -16`. `state.MAIN_MENU_GRID` carries that override (checked against
+4.6.1); `state.mainMenuGrid(w, h)` returns it, or one row of PyUI's own count elsewhere.
 
-`state.applyMainMenuDefaults()` therefore sizes the tile set to the device: Games, Apps and
-Settings always, then Favorites, then Recents, then Collections as slots allow. On a 4-wide panel
-that is Favorites + the three, which is exactly the stock SPRUCE set (SPRUCE ships
-`recentsEnabled: false`, and PyUI's own default for `collectionsEnabled` is already false). On
-16:9 the fifth slot takes Recents. A List layout scrolls, so it enables all six.
+`state.applyMainMenuDefaults()` therefore sizes the tile set to the device's slots (columns x rows):
+Games, Apps and Settings always, then Favorites, then Recents, then Collections as slots allow. On a
+4-wide row that is Favorites + the three, exactly the stock SPRUCE set (SPRUCE ships
+`recentsEnabled: false`, and PyUI's own default for `collectionsEnabled` is already false); on 16:9
+the fifth slot takes Recents; the Zero 40's 2x3 shows all six. A List layout scrolls, so it enables
+all six too.
 
 It runs on first start (when no settings file exists), whenever the home-screen layout changes, and
 when a preset or settings snapshot is loaded that names none of the three tile flags (every built-in
@@ -338,9 +343,18 @@ preset; `state.importTheme`), so the Spruce Options rows always show what the la
 produce; the user can still change any of them afterwards. A snapshot naming any tile flag (saved
 settings, user presets) keeps its own choice. Until 2026-11-08 a loaded preset fell back to the
 static field defaults instead, which on 16:9 left the fifth slot empty and gave List presets
-(minui, minui_light) Favorites only. `mainMenuColCount` is emitted with the same rule, clamped to 4..5.
-The stage-2 cases follow it: without tile flags they expect all three on in a List, and Favorites
-on and Collections off in a Grid, leaving Recents unasserted because it depends on the panel.
+(minui, minui_light) Favorites only.
+
+Each `config_<W>x<H>.json` carries the grid of its own resolution (`mainMenuColCount`, and
+`mainMenuRowCount` / `multiRowGridTextYOffset` only where SPRUCE sets them). The base `config.json`
+leaves the grid to PyUI, as SPRUCE's does: PyUI reads it on 640x480 (default 4) and patches it for
+panels without their own set, where `int(4 * width_multiplier)` fits the real panel. Before
+2026-11-08 every set carried the device's one-row count, so the Zero 40 got a 4x1 row with Favorites
+only where stock SPRUCE shows 2x3. The tile flags stay theme-wide (the building device's); an
+all-resolutions theme moved to a panel with fewer slots shows the first tiles that fit.
+
+The stage-2 cases follow it: without tile flags they expect all three on in a List, and only
+Favorites on in a Grid, leaving Recents and Collections unasserted because they depend on the panel.
 
 ## 9a. AccentColor, and what "friendly" would cost
 

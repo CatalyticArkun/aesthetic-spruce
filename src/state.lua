@@ -64,20 +64,37 @@ state.COLOR_FIELDS = {
 -- Application (non-theme) state
 --- Main-menu tiles that fit the device, the way the stock SPRUCE theme is laid out.
 ---
---- The grid is one row (PyUI mainMenuRowCount defaults to 1), so only as many tiles fit as there
---- are columns. PyUI sizes those itself as int(4 * width_multiplier), which works out at 4 on
---- every supported panel except 16:9, where it is 5; we follow that rule rather than invent one.
---- Games, Apps and Settings are always on, so the remaining slots go to Favorites first, then
---- Recents, and Collections last -- which reproduces SPRUCE's own set on a 4-wide screen.
---- A list scrolls, so it shows everything.
-function state.mainMenuColumns()
-	local w, h = state.screenWidth or 640, state.screenHeight or 480
+--- PyUI draws the main menu as mainMenuRowCount (default 1) rows of mainMenuColCount (default
+--- int(4 * width_multiplier): 4 on every supported panel except 16:9, where it is 5) and drops
+--- tiles that do not fit. SPRUCE overrides that grid on some panels (MAIN_MENU_GRID); elsewhere we
+--- follow PyUI's own rule rather than invent one. Games, Apps and Settings are always on, so the
+--- spare slots go to Favorites first, then Recents, then Collections -- SPRUCE's own set on a
+--- 4-wide row, all six on the Zero 40's 2x3. A list scrolls, so it shows everything.
+
+-- SPRUCE's config_<WxH>.json grids that differ from one PyUI row (checked against 4.6.1)
+state.MAIN_MENU_GRID = {
+	["480x800"] = { cols = 2, rows = 3, textYOffset = -16 }, -- Zero 40 portrait (SPRUCE since 09-25)
+}
+
+--- cols, rows (and SPRUCE's multiRowGridTextYOffset, if any) of the main menu on a WxH panel
+function state.mainMenuGrid(w, h)
+	w, h = w or 640, h or 480
+	local g = state.MAIN_MENU_GRID[string.format("%dx%d", w, h)]
+	if g then
+		return g.cols, g.rows, g.textYOffset
+	end
 	if w <= 0 or h <= 0 then
-		return 4
+		return 4, 1
 	end
 	local scaleW, scaleH = w / 640, h / 480
 	local widthMultiplier = scaleW > scaleH and (((scaleW - scaleH) / scaleH) + 1) or 1
-	return math.max(4, math.min(5, math.floor(4 * widthMultiplier)))
+	return math.max(4, math.min(5, math.floor(4 * widthMultiplier))), 1
+end
+
+--- Tiles that fit on this device's main menu (columns x rows)
+function state.mainMenuSlots()
+	local cols, rows = state.mainMenuGrid(state.screenWidth, state.screenHeight)
+	return cols * rows
 end
 
 --- Set the three optional tiles to this layout's defaults. Called on first run and whenever the
@@ -87,7 +104,7 @@ function state.applyMainMenuDefaults()
 		state.showRecents, state.showCollections, state.showFavorites = true, true, true
 		return
 	end
-	local spare = state.mainMenuColumns() - 3 -- Games, Apps and Settings are always shown
+	local spare = state.mainMenuSlots() - 3 -- Games, Apps and Settings are always shown
 	state.showFavorites = spare >= 1
 	state.showRecents = spare >= 2
 	state.showCollections = spare >= 3
