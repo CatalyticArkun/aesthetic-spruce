@@ -13,14 +13,20 @@ loader has changed in a way the generator does not understand.
 | 4.4.3 | MagicX Zero 28, MagicX Zero 40 |
 | 4.5.3 | MagicX Zero 28, MagicX Zero 40 |
 | 4.5.5 | MagicX XU Mini M |
+| 4.6.1 (nightly 20261109) | TrimUI Smart Pro S, MagicX Zero 40 (oakMOSS), TrimUI Brick on oakMOSS |
 
 The XU Mini M run was the thorough one: on 4.5.5 it built 71 themes covering every option value
 and all 34 built-in presets, and each generated theme was checked on the device for correct
 gradients, icon tones, PyUI config keys and image formats.
 
+The 4.6.1 runs (2026-11-08) installed the test build, built and applied a theme headless, checked
+the main menu on screen (5 tiles on the 16:9 Smart Pro S, SPRUCE's 2x3 grid of six on the Zero 40,
+4 tiles on the Brick) and restored the stock theme; on the Zero 40 and the oakMOSS Brick a person
+also pressed A, B, X and Y in the app and each acted as labelled.
+
 ## Expected to work, not yet run
 
-TrimUI Brick (stock and on oakMOSS) and Smart Pro, GKD Pixel2, the rest of the Anbernic RG XX
+TrimUI Brick (stock) and Smart Pro, GKD Pixel2, the rest of the Anbernic RG XX
 family, RGB30, the MagicX XU20 and the BatleXP G350. The MagicX boards need spruceOS 4.4.2 or a Development build: 4.4.1
 has no MagicX support in its menu.
 

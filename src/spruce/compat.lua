@@ -8,7 +8,7 @@
 local compat = {}
 
 -- Base versions this build was verified on (hardware runs, theme loaded by PyUI)
-compat.TESTED_VERSIONS = { "4.3.6", "4.4.0", "4.4.3", "4.5.3" }
+compat.TESTED_VERSIONS = { "4.3.6", "4.4.0", "4.4.3", "4.5.3", "4.6.1" }
 -- Release families (major.minor) whose PyUI theme format this build targets. PyUI's
 -- themes/theme.py and theme_patcher.py read the same layout from 4.3.0 to the 4.6.1 nightly
 -- (4.5.7 moved the patcher, unchanged, into default_theme_patcher.py; 4.6.0 changed neither,
