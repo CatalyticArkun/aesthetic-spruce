@@ -57,13 +57,22 @@ function themePreview.draw(x, y, w, h, opts)
 	local bottomH = state.showBottomBar and h * 0.11 or 0
 	local contentH = h - (top - y) - bottomH - h * 0.04
 	if layout == "Grid" then
-		local cols = 4
+		-- The device's own main-menu grid (one row of 4 or 5, SPRUCE's 2x3 on the Zero 40), filled
+		-- row by row with the tiles the current options turn on, as PyUI lays them out
+		local cols, rows = state.mainMenuGrid(state.screenWidth, state.screenHeight)
+		local count = 3 + (state.showFavorites and 1 or 0) + (state.showRecents and 1 or 0) + (state.showCollections and 1 or 0)
+		count = math.min(count, cols * rows)
+		rows = math.ceil(count / cols)
 		local gap = w * 0.03
 		local tileW = (w - gap * (cols + 1)) / cols
-		local tileH = math.min(tileW * 1.1, contentH * 0.8)
-		local ty = top + (contentH - tileH) / 2
-		for i = 1, cols do
-			local tx = x + gap + (i - 1) * (tileW + gap)
+		local tileH = math.min(tileW * 1.1, (contentH * 0.9 - gap * (rows - 1)) / rows)
+		tileW = math.min(tileW, tileH / 1.1)
+		local gridX = x + (w - (cols * tileW + (cols - 1) * gap)) / 2
+		local gridY = top + (contentH - (rows * tileH + (rows - 1) * gap)) / 2
+		for i = 1, count do
+			local col, row = (i - 1) % cols, math.floor((i - 1) / cols)
+			local tx = gridX + col * (tileW + gap)
+			local ty = gridY + row * (tileH + gap)
 			local selected = i == 2
 			if selected then
 				love.graphics.setColor(fg)
@@ -109,10 +118,12 @@ function themePreview.draw(x, y, w, h, opts)
 		love.graphics.setColor(fg[1], fg[2], fg[3], 0.12)
 		love.graphics.rectangle("fill", x, by, w, bottomH)
 		love.graphics.setColor(fg[1], fg[2], fg[3], 0.9)
-		love.graphics.circle("fill", x + w * 0.06, by + bottomH / 2, bottomH * 0.22)
-		love.graphics.rectangle("fill", x + w * 0.1, by + bottomH * 0.38, w * 0.1, bottomH * 0.24, 2, 2)
-		love.graphics.circle("fill", x + w * 0.26, by + bottomH / 2, bottomH * 0.22)
-		love.graphics.rectangle("fill", x + w * 0.3, by + bottomH * 0.38, w * 0.1, bottomH * 0.24, 2, 2)
+		-- sized by the narrower side too, so a portrait preview keeps the marks apart
+		local dot, line = math.min(bottomH * 0.22, w * 0.025), math.min(bottomH * 0.24, w * 0.02)
+		love.graphics.circle("fill", x + w * 0.06, by + bottomH / 2, dot)
+		love.graphics.rectangle("fill", x + w * 0.1, by + (bottomH - line) / 2, w * 0.1, line, 2, 2)
+		love.graphics.circle("fill", x + w * 0.26, by + bottomH / 2, dot)
+		love.graphics.rectangle("fill", x + w * 0.3, by + (bottomH - line) / 2, w * 0.1, line, 2, 2)
 	end
 	love.graphics.setStencilTest()
 	love.graphics.pop()
@@ -125,13 +136,16 @@ function themePreview.draw(x, y, w, h, opts)
 	love.graphics.pop()
 end
 
---- Largest 4:3 rectangle centred in the given area
+--- Largest rectangle with the device's own shape (4:3 until the screen size is known) centred in
+--- the given area, so a portrait panel previews as portrait
 function themePreview.fitRect(areaX, areaY, areaW, areaH)
+	local sw, sh = state.screenWidth or 0, state.screenHeight or 0
+	local aspect = (sw > 0 and sh > 0) and sw / sh or 4 / 3
 	local w = areaW
-	local h = w * 3 / 4
+	local h = w / aspect
 	if h > areaH then
 		h = areaH
-		w = h * 4 / 3
+		w = h * aspect
 	end
 	return areaX + (areaW - w) / 2, areaY + (areaH - h) / 2, w, h
 end

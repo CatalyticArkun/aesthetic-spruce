@@ -368,6 +368,11 @@ all-resolutions theme moved to a panel with fewer slots shows the first tiles th
 The stage-2 cases follow it: without tile flags they expect all three on in a List, and only
 Favorites on in a Grid, leaving Recents and Collections unasserted because they depend on the panel.
 
+The in-app preview (`src/ui/theme_preview.lua`, shown on Home Screen Layout, Icons and Bars) draws
+the same grid: `fitRect` takes the device's own shape and the Grid mock lays out
+`state.mainMenuGrid` row by row with the tiles the options enable (since 2026-11-18; it was a
+fixed 4:3 frame with one row of four).
+
 ## 9a. AccentColor, and what "friendly" would cost
 
 `App/AccentColor` (spruce 4.5.x) recolours one accent across a theme, on the device. It only
