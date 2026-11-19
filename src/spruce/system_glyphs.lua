@@ -20,7 +20,7 @@ glyphs.familyGlyph = {
 glyphs.families = {
 	handheld = {
 		"gb", "gbc", "gba", "gg", "lynx", "ngp", "ngpc", "ws", "wsc", "supervision", "megaduck", "poke",
-		"psp", "nds", "dsi", "vb", "gw", "j2me",
+		"psp", "nds", "dsi", "3ds", "vb", "gw", "j2me", "gamate",
 	},
 	console = {
 		"fc", "fds", "sfc", "sgb", "sufami", "msu1", "satella", "n64", "md", "ms", "32X", "segasgone", "msumd",
@@ -53,13 +53,13 @@ glyphs.apps = {
 
 -- Display names (what PyUI shows), used for the "Letter" icon style
 glyphs.names = {
-	["32X"] = "32X", ["5200"] = "Atari 5200", ["7800"] = "Atari 7800", amiga = "Amiga", arcade = "Arcade",
+	["32X"] = "32X", ["3ds"] = "3DS", ["5200"] = "Atari 5200", ["7800"] = "Atari 7800", amiga = "Amiga", arcade = "Arcade",
 	arduboy = "Arduboy", atari800 = "Atari 800", atari = "Atari 2600", atarist = "Atari ST",
 	atomiswave = "Atomiswave", c64 = "Commodore 64", chai = "ChaiLove", coco = "CoCo", col = "ColecoVision",
 	cpc = "Amstrad CPC", cps1 = "CPS-1", cps2 = "CPS-2", cps3 = "CPS-3", dc = "Dreamcast", doom = "Doom",
 	dos = "DOS", dsi = "DSi", easyrpg = "EasyRPG", fairchild = "Channel F", fake08 = "FAKE-08", fbneo = "FBNEO",
 	fc = "NES", fds = "Famicom Disk System",
-	ffplay = "Video", gametank = "Game Tank", gba = "Game Boy Advance", gbc = "Game Boy Color", gb = "Game Boy",
+	ffplay = "Video", gamate = "Gamate", gametank = "Game Tank", gba = "Game Boy Advance", gbc = "Game Boy Color", gb = "Game Boy",
 	gg = "Game Gear", gw = "Game & Watch", itv = "Intellivision", j2me = "J2ME", jaguar = "Jaguar", loopy = "Loopy",
 	lynx = "Lynx",
 	mame = "MAME", md = "Genesis", megaduck = "Mega Duck", ["mkxp-z"] = "MKXP-Z", ms = "Master System",

@@ -83,6 +83,9 @@ function pyuiConfig.build(width, height)
 		grid = { font = fontFile, grid1x4 = px(25 * fm, s), grid3x4 = px(18 * fm, s), color = fg, selectedcolor = fg },
 		title = { font = fontFile, size = px(25, s), color = fg },
 		currentpage = { font = fontFile, size = px(22, s), color = fg },
+		-- Bottom-bar hints with our context-* buttons, as SPRUCE does (PyUI after 4.6.1; older PyUI
+		-- ignores the section and keeps icon-A-54 / icon-B-54)
+		hint = { font = fontFile, size = px(25 * fm, s), color = fg, contextbuttons = true },
 		total = { font = fontFile, size = px(22, s), color = fg },
 		batteryPercentage = { font = fontFile, size = px(18, s), color = fg },
 		listFontSize = px(24 * fm, s),

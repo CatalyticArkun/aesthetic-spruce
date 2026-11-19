@@ -16,7 +16,8 @@ compat.TESTED_VERSIONS = { "4.3.6", "4.4.0", "4.4.3", "4.5.3", "4.6.1" }
 -- optional screensaver.lowPowerWhileIdle, 4.4.0 the optional screensaver.dimBacklight and
 -- screensaver.widgets, 4.4.3 the optional ic-cheevos-mark, 4.5 the three bluetooth status icons
 -- and 4.5.7 an optional shutdown image (all fall back to a PyUI or stock-theme default when a
--- theme omits them).
+-- theme omits them). The 4.6.1 nightly of 2026-11-18 adds the optional hint.contextbuttons with its
+-- context-* buttons; older PyUI ignores both.
 compat.SUPPORTED_FAMILIES = { "4.3", "4.4", "4.5", "4.6" }
 
 local PYUI_THEME_LOADER = "/mnt/SDCARD/App/PyUI/main-ui/themes/theme.py"

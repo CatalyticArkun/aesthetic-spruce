@@ -13,6 +13,7 @@
 ---   panel       popup/keyboard panel: background fill with a foreground outline
 ---   empty       transparent (keeps layout offsets identical to SPRUCE)
 ---   pictogram   tinted icon PNG centred in the asset (status icons, buttons, missing image)
+---   button      bottom-bar hint button: a foreground circle or pill with `label` cut out
 ---   tile        main-menu tile: a square plate with a pictogram in the TOP of the image; the bottom
 ---               band stays transparent because PyUI draws the label there (grid_view.py y_text =
 ---               310/480 of the screen); the focused variant inverts the colours
@@ -54,6 +55,16 @@ local assets = {
 	["icon-A-54"] = { kind = "pictogram", icon = "kenney_input_prompts/steam_button_a", scale = 0.95, dims = { 36, 36 } },
 	["icon-B-54"] = { kind = "pictogram", icon = "kenney_input_prompts/steam_button_b", scale = 0.95, dims = { 36, 36 } },
 	["icon-START"] = { kind = "pictogram", icon = "kenney_input_prompts/steam_button_start_custom", scale = 0.9 },
+
+	-- Context hint buttons (theme "hint.contextbuttons", PyUI after 4.6.1): PyUI draws context-<button>
+	-- at its natural size before each bottom-bar label; older PyUI ignores them and uses icon-A/B-54
+	["context-a"] = { kind = "button", label = "A" },
+	["context-b"] = { kind = "button", label = "B" },
+	["context-x"] = { kind = "button", label = "X" },
+	["context-y"] = { kind = "button", label = "Y" },
+	["context-start"] = { kind = "button", label = "START" },
+	["context-select"] = { kind = "button", label = "SELECT" },
+	["context-menu"] = { kind = "button", label = "MENU" },
 
 	["icon-wifi-signal-01"] = { kind = "pictogram", icon = "lucide/glyph/wifi", alpha = 0.4 },
 	["icon-wifi-signal-02"] = { kind = "pictogram", icon = "lucide/glyph/wifi", alpha = 0.6 },

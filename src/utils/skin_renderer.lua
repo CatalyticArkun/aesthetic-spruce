@@ -20,6 +20,84 @@ local function withAlpha(c, a)
 	return { c[1], c[2], c[3], a or 1 }
 end
 
+local fonts = require("ui.fonts")
+local labelFonts = {}
+-- The theme's own font, so the hint buttons match the labels PyUI prints beside them
+local function themeFont(size)
+	local ttf = fonts.themeDefinitions[1].ttf
+	for _, def in ipairs(fonts.themeDefinitions) do
+		if def.name == state.fontFamily then
+			ttf = def.ttf
+		end
+	end
+	local key = ttf .. "@" .. size
+	labelFonts[key] = labelFonts[key] or love.graphics.newFont(ttf, size)
+	return labelFonts[key]
+end
+
+-- Coverage of `label` as ImageData plus its ink box, so it can be centred on what is drawn
+local function labelCoverage(label, font)
+	local pad = 2
+	local cw, ch = font:getWidth(label) + 2 * pad, font:getHeight() + 2 * pad
+	local canvas = love.graphics.newCanvas(cw, ch)
+	love.graphics.push("all")
+	love.graphics.setCanvas(canvas)
+	love.graphics.clear(0, 0, 0, 0)
+	love.graphics.setColor(1, 1, 1, 1)
+	love.graphics.setFont(font)
+	love.graphics.print(label, pad, pad)
+	love.graphics.pop()
+	local data = canvas:newImageData()
+	canvas:release()
+	local x0, y0, x1, y1 = cw, ch, -1, -1
+	for y = 0, ch - 1 do
+		for x = 0, cw - 1 do
+			local _, _, _, a = data:getPixel(x, y)
+			if a > 0 then
+				x0, y0 = math.min(x0, x), math.min(y0, y)
+				x1, y1 = math.max(x1, x), math.max(y1, y)
+			end
+		end
+	end
+	return data, x0, y0, x1, y1
+end
+
+-- A hint button (SPRUCE's context-*.png): a foreground circle or pill with its label cut out, so
+-- the bar shows through the letters as it does through the Kenney A/B prompts. Composed on the CPU:
+-- the capsule is an exact anti-aliased shape and the label is centred on its ink, not its line box.
+local function buttonImage(label, w, h, color)
+	local r = h / 2
+	local size = math.floor(h * (#label == 1 and 0.66 or 0.46) + 0.5) -- close to SPRUCE's cap heights
+	local fit = #label == 1 and w * 0.7 or w - h * 0.6 -- a letter in its circle, a word between the caps
+	local font, data, x0, y0, x1, y1
+	repeat
+		font = themeFont(math.max(6, size))
+		data, x0, y0, x1, y1 = labelCoverage(label, font)
+		size = size - 1
+	until x1 < 0 or (x1 - x0 + 1) <= fit or size < 6
+	local dx, dy = 0, 0
+	if x1 >= 0 then
+		dx = math.floor((w - (x1 - x0 + 1)) / 2 + 0.5) - x0
+		dy = math.floor((h - (y1 - y0 + 1)) / 2 + 0.5) - y0
+	end
+	local tw, th = data:getDimensions()
+	local out = love.image.newImageData(w, h)
+	out:mapPixel(function(x, y)
+		local px, py = x + 0.5, y + 0.5
+		local cx = math.max(r, math.min(w - r, px))
+		local d = math.sqrt((px - cx) ^ 2 + (py - r) ^ 2) - r
+		local shape = math.max(0, math.min(1, 0.5 - d))
+		local ix, iy = x - dx, y - dy
+		local ink = 0
+		if ix >= 0 and iy >= 0 and ix < tw and iy < th then
+			local _, _, _, a = data:getPixel(ix, iy)
+			ink = a
+		end
+		return color[1], color[2], color[3], shape * (1 - ink)
+	end)
+	return out
+end
+
 -- A ramp built on the CPU, not a vertex-coloured mesh: the GPU interpolation missed both declared
 -- endpoints (#1B2430 came out 24,34,47 on a Brick Pro), while this hits the chosen hex exactly.
 local function gradientRamp(horizontal, from, to)
@@ -108,6 +186,14 @@ local function drawAsset(name, spec, w, h, scale)
 			love.graphics.rectangle("fill", 0, 0, w, h)
 			love.graphics.setBlendMode("alpha")
 		end
+	elseif kind == "button" then
+		local image = love.graphics.newImage(buttonImage(spec.label, w, h, colorFor(spec.color)))
+		-- copy the composed pixels as they are: plain alpha blending would darken the edge colours
+		love.graphics.setBlendMode("replace", "premultiplied")
+		love.graphics.setColor(1, 1, 1, 1)
+		love.graphics.draw(image, 0, 0)
+		love.graphics.setBlendMode("alpha")
+		image:release()
 	elseif kind == "tile" then
 		-- square plate in the top of the image; the band below is PyUI's label area
 		local side = math.min(w, h)

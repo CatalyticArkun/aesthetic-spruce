@@ -132,10 +132,22 @@ the 4.4.3 tree added the Zero 40's 480x800 set and `ic-cheevos-mark`, and 4.5.3 
 fbneo, fake08, vic20, coco, j2me and pc98 and resized the saturn, atomiswave and naomi tiles; Development
 6861c2b56, 4.5.7, added the 720x540 set, loopy and the cheevos and zitch app tiles, deleted 34 assets
 nothing read, and dropped the 480x800 and 720x480 icon sets that duplicated `icons/`; 4.6.0 and the 4.6.1 nightly left
-SPRUCE as it was), generated from
+SPRUCE as it was until Development b43e8baf9, 2026-11-18, added the 3DS and Gamate system art and the seven
+`context-*` hint buttons), generated from
 spruce's SPRUCE theme by `utils/generate_skin_spec.py` (regenerate when spruce changes SPRUCE).
 Exceptions: `background` is always the full screen (PyUI's patcher rule; SPRUCE's own 1280x720 file
 is 960x720), `icon-A-54`/`icon-B-54` are compact buttons (SPRUCE ships transparent 640x54 strips).
+
+Bottom-bar hints: since Development b43e8baf9 PyUI draws `skin/context-<button>.png` (a, b, x, y,
+start, select, menu) at its natural size before each hint label when a theme sets
+`hint.contextbuttons: true`, and prints the bare label where a button image is missing (SPRUCE does
+this; 683465aa4, d8b63744d). Generated themes do the same: `pyui_config.lua` writes a `hint` section
+(theme font, size 25 at 640x480 times the font-size option, foreground colour, `contextbuttons`) and
+the `button` kind in `skin_renderer.lua` draws each button at SPRUCE's size as a foreground circle
+(face buttons) or pill (START/SELECT/MENU) with its label cut out in the theme font, composed on the
+CPU so the capsule edge and the label are exact. Older PyUI reads no `hint` section and keeps
+`icon-A-54`/`icon-B-54`, which are still emitted. `tests/test_skin_assets.py` pins the seven buttons
+against SPRUCE's sizes.
 
 Icons: `system_glyphs.lua` groups system ids into families (handheld, console, arcade, computer)
 with one glyph each, `overrides` for engines and ports, `apps` for app icons, `names` for the
