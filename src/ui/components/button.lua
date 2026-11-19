@@ -244,6 +244,24 @@ function Button:drawText()
 	love.graphics.print(self.text, self.x + BUTTON_CONFIG.HORIZONTAL_PADDING, self.y + (self.height - textHeight) / 2)
 end
 
+-- Width left for a right-aligned value that ends at rightX, after the label and a clear gap.
+-- Call it while the label's font is set.
+function Button:valueRoom(rightX)
+	local labelRight = self.x + BUTTON_CONFIG.HORIZONTAL_PADDING + love.graphics.getFont():getWidth(self.text)
+	return rightX - labelRight - BUTTON_CONFIG.SPACING * 2
+end
+
+-- The first of `candidates` that fits `room` in the current font, or nil (show the swatch alone)
+local function fittingText(room, candidates)
+	local font = love.graphics.getFont()
+	for _, text in ipairs(candidates) do
+		if font:getWidth(text) <= room then
+			return text
+		end
+	end
+	return nil
+end
+
 function Button:drawBasic()
 	self:drawBackground()
 	self:drawText()
@@ -337,18 +355,22 @@ function Button:drawColor()
 		BUTTON_CONFIG.CORNER_RADIUS / 2
 	)
 
-	-- Draw hex code
+	-- Draw hex code, unless it would run into the label (narrow screens show the swatch alone)
+	local room = self:valueRoom(colorX - 10)
 	local originalFont = love.graphics.getFont()
 	if self.monoFont then
 		love.graphics.setFont(self.monoFont)
 	end
 
-	local hexWidth = love.graphics.getFont():getWidth(self.hexColor)
-	love.graphics.print(
-		self.hexColor,
-		colorX - hexWidth - 10,
-		self.y + (self.height - love.graphics.getFont():getHeight()) / 2
-	)
+	local hexText = fittingText(room, { self.hexColor })
+	if hexText then
+		local hexWidth = love.graphics.getFont():getWidth(hexText)
+		love.graphics.print(
+			hexText,
+			colorX - hexWidth - 10,
+			self.y + (self.height - love.graphics.getFont():getHeight()) / 2
+		)
+	end
 
 	love.graphics.setFont(originalFont)
 end
@@ -378,21 +400,27 @@ function Button:drawGradient()
 		cornerRadius
 	)
 
-	-- Draw gradient text
+	-- Draw gradient text in the room the label leaves: "a → b", then "a→b", then the swatch alone
 	love.graphics.setColor(colors.ui.foreground[1], colors.ui.foreground[2], colors.ui.foreground[3], opacity)
 
+	local room = self:valueRoom(colorX - 10)
 	local originalFont = love.graphics.getFont()
 	if self.monoFont then
 		love.graphics.setFont(self.monoFont)
 	end
 
-	local gradientText = self.startColor .. " → " .. self.stopColor
-	local textWidth = love.graphics.getFont():getWidth(gradientText)
-	love.graphics.print(
-		gradientText,
-		colorX - textWidth - 10,
-		self.y + (self.height - love.graphics.getFont():getHeight()) / 2
-	)
+	local gradientText = fittingText(room, {
+		self.startColor .. " → " .. self.stopColor,
+		self.startColor .. "→" .. self.stopColor,
+	})
+	if gradientText then
+		local textWidth = love.graphics.getFont():getWidth(gradientText)
+		love.graphics.print(
+			gradientText,
+			colorX - textWidth - 10,
+			self.y + (self.height - love.graphics.getFont():getHeight()) / 2
+		)
+	end
 
 	love.graphics.setFont(originalFont)
 end
@@ -469,6 +497,8 @@ function Button:drawDualColor()
 
 	local font = love.graphics.getFont()
 	local originalFont = font
+	local rightEdge = self.x + self.width - BUTTON_CONFIG.HORIZONTAL_PADDING
+	local room = self:valueRoom(rightEdge)
 	if self.monoFont then
 		love.graphics.setFont(self.monoFont)
 		font = self.monoFont
@@ -479,17 +509,20 @@ function Button:drawDualColor()
 	local colorBoxSpacing = 10
 	local hexSpacing = 10
 
+	-- Both hex codes, or (when they would run into the label) the two swatches alone
 	local hex1 = self.color1Hex
 	local hex2 = self.color2Hex
 	local hex1Width = font:getWidth(hex1)
 	local hex2Width = font:getWidth(hex2)
+	if hex1Width + hex2Width + hexSpacing * 2 + colorBoxWidth * 2 + colorBoxSpacing > room then
+		hex1, hex2, hex1Width, hex2Width, hexSpacing = "", "", 0, 0, 0
+	end
 	local previewY = self.y + (self.height - colorBoxHeight) / 2
 	local hexY = self.y + (self.height - font:getHeight()) / 2
 	local opacity = self.disabled and 0.5 or 1
 
-	-- Calculate total width for right alignment
-	local totalWidth = hex1Width + colorBoxWidth + hexSpacing + hex2Width + colorBoxWidth + colorBoxSpacing * 2
-	local rightEdge = self.x + self.width - BUTTON_CONFIG.HORIZONTAL_PADDING
+	-- Width actually drawn, so the last swatch ends at the right edge in both forms
+	local totalWidth = hex1Width + hexSpacing + colorBoxWidth + colorBoxSpacing + hex2Width + hexSpacing + colorBoxWidth
 	local x = rightEdge - totalWidth
 
 	-- Draw hex1
