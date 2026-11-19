@@ -368,6 +368,14 @@ all-resolutions theme moved to a panel with fewer slots shows the first tiles th
 The stage-2 cases follow it: without tile flags they expect all three on in a List, and only
 Favorites on in a Grid, leaving Recents and Collections unasserted because they depend on the panel.
 
+Text on the Zero 40: SPRUCE's `config_480x800.json` is hand-tuned at "1x scale rather than 0.75x"
+(7d9cd10f9) and names the sizes PyUI would otherwise derive (`listFontSize`, `descListFontSize`,
+grid, index, message, top-bar and battery sizes, all 22). Scaled to 0.75x the app list's title ran
+into its description there: PyUI sizes each row from the text and drops the title by 5 x its height
+multiplier (~11 px on a portrait panel). `pyui_config.lua` therefore keeps a `TEXT_OVERRIDES` table
+like `SYSTEM_GRID`: at 480x800 text uses scale 1.0 and SPRUCE's explicit sizes (x the font-size
+option), while geometry (offsets, box-art width) keeps the panel's own scale (since 2026-11-18).
+
 The in-app preview (`src/ui/theme_preview.lua`, shown on Home Screen Layout, Icons and Bars) draws
 the same grid: `fitRect` takes the device's own shape and the Grid mock lays out
 `state.mainMenuGrid` row by row with the tiles the options enable (since 2026-11-18; it was a

@@ -52,6 +52,21 @@ local function px(base, scale)
 	return math.max(8, math.floor(base * scale + 0.5))
 end
 
+-- SPRUCE's hand-tuned text on panels where scaling from 640x480 reads badly: its 480x800 set is "1x
+-- scale rather than 0.75x" (7d9cd10f9) and names the sizes PyUI would derive. At 0.75x the app list's
+-- title ran into its description there (PyUI drops the title 5 x height multiplier, ~11 px). `scale`
+-- replaces the text scale (geometry keeps its own); `sizes` are SPRUCE's values, x the font-size option.
+local TEXT_OVERRIDES = {
+	["480x800"] = {
+		scale = 1.0,
+		sizes = {
+			listFontSize = 22, descListFontSize = 22, gridSingleRowFontSize = 22, gridMultiRowFontSize = 22,
+			indexSelectedFontSize = 22, indexTotalSize = 22, messageFontSize = 22, topBarFontSize = 22,
+			batteryPercentFontSize = 22,
+		},
+	},
+}
+
 -- PyUI defaults the system grid to 4 columns by 2 rows (scaled). SPRUCE overrides that on the two
 -- panels where it reads badly: 4x3 on the 720x720 squares, 3x3 on the Zero 40's portrait panel.
 -- Generated themes follow it, and leave PyUI's default alone everywhere else.
@@ -66,6 +81,8 @@ function pyuiConfig.build(width, height)
 		return nil, "Selected font not found: " .. tostring(state.fontFamily)
 	end
 	local s = pyuiConfig.scaleFor(width, height)
+	local textOverride = TEXT_OVERRIDES[string.format("%dx%d", width, height)]
+	local ts = textOverride and textOverride.scale or s -- text scale
 	local fm = pyuiConfig.fontSizeMultiplier()
 	local fg = state.getColorValue("foreground")
 	local bg = state.getColorValue("background")
@@ -77,18 +94,18 @@ function pyuiConfig.build(width, height)
 		author = "Aesthetic Spruce",
 		description = "Generated on-device by Aesthetic Spruce (duo-tone)",
 
-		list = { font = fontFile, size = px(24 * fm, s), color = fg, selectedcolor = bg },
+		list = { font = fontFile, size = px(24 * fm, ts), color = fg, selectedcolor = bg },
 		-- grid labels are drawn by PyUI beside/below the tile on the background, so the selected label
 		-- stays in the foreground colour (the tile itself carries the selection)
-		grid = { font = fontFile, grid1x4 = px(25 * fm, s), grid3x4 = px(18 * fm, s), color = fg, selectedcolor = fg },
-		title = { font = fontFile, size = px(25, s), color = fg },
-		currentpage = { font = fontFile, size = px(22, s), color = fg },
+		grid = { font = fontFile, grid1x4 = px(25 * fm, ts), grid3x4 = px(18 * fm, ts), color = fg, selectedcolor = fg },
+		title = { font = fontFile, size = px(25, ts), color = fg },
+		currentpage = { font = fontFile, size = px(22, ts), color = fg },
 		-- Bottom-bar hints with our context-* buttons, as SPRUCE does (PyUI after 4.6.1; older PyUI
 		-- ignores the section and keeps icon-A-54 / icon-B-54)
-		hint = { font = fontFile, size = px(25 * fm, s), color = fg, contextbuttons = true },
-		total = { font = fontFile, size = px(22, s), color = fg },
-		batteryPercentage = { font = fontFile, size = px(18, s), color = fg },
-		listFontSize = px(24 * fm, s),
+		hint = { font = fontFile, size = px(25 * fm, ts), color = fg, contextbuttons = true },
+		total = { font = fontFile, size = px(22, ts), color = fg },
+		batteryPercentage = { font = fontFile, size = px(18, ts), color = fg },
+		listFontSize = px(24 * fm, ts),
 
 		-- the main menu stays TEXT_ONLY in list mode: PyUI builds its entries with icon = nil and
 		-- does not pass icon_and_desc_use_image_in_place_of_icon, so a list there cannot show icons
@@ -165,6 +182,12 @@ function pyuiConfig.build(width, height)
 		end
 		if textYOffset then
 			cfg.multiRowGridTextYOffset = textYOffset
+		end
+	end
+
+	if textOverride then
+		for key, size in pairs(textOverride.sizes) do
+			cfg[key] = px(size * fm, 1)
 		end
 	end
 
